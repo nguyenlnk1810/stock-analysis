@@ -5,7 +5,8 @@ let signalChart = null;
 async function loadData() {
     document.getElementById('stockGrid').innerHTML = '<div class="loading">🔄 Đang tải dữ liệu...</div>';
     try {
-        const resp = await fetch('data/analysis.json?t=' + Date.now());
+        const base = window.location.pathname.replace(/\/?$/, '/');
+        const resp = await fetch(base + 'data/analysis.json?t=' + Date.now());
         data = await resp.json();
         renderDashboard();
     } catch (e) {
