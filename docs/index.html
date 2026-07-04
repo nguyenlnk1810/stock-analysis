@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Analyst - Phân tích chứng khoán</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📈 AI Stock Analyst</h1>
+            <p class="subtitle">Hệ thống phân tích chứng khoán thông minh</p>
+            <div class="last-update" id="lastUpdate">Đang tải...</div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Market Overview -->
+        <section class="card" id="marketOverview">
+            <h2>📊 Tổng quan thị trường</h2>
+            <div class="market-grid" id="marketGrid">
+                <div class="metric">
+                    <span class="label">VN-Index</span>
+                    <span class="value" id="idxPrice">--</span>
+                    <span class="change" id="idxChange">--</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Mã tăng</span>
+                    <span class="value green" id="breadthAdv">--</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Mã giảm</span>
+                    <span class="value red" id="breadthDec">--</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Trên MA20</span>
+                    <span class="value" id="aboveMA20">--</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Trên MA50</span>
+                    <span class="value" id="aboveMA50">--</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Tín hiệu Mua/Bán</span>
+                    <span class="value" id="netSignal">--</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Breadth Chart -->
+        <section class="card">
+            <h2>📊 Độ rộng thị trường</h2>
+            <div class="chart-row">
+                <div class="chart-box">
+                    <canvas id="breadthChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="signalChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stock List -->
+        <section class="card">
+            <h2>📋 Danh sách cổ phiếu phân tích</h2>
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Tìm mã cổ phiếu..." oninput="filterStocks()">
+                <select id="sortSelect" onchange="renderStocks()">
+                    <option value="score">Sắp xếp: Điểm số</option>
+                    <option value="symbol">Sắp xếp: Mã</option>
+                    <option value="price">Sắp xếp: Giá</option>
+                    <option value="change">Sắp xếp: Thay đổi</option>
+                </select>
+                <button onclick="refreshData()" class="btn-refresh">🔄 Làm mới</button>
+            </div>
+            <div class="stock-grid" id="stockGrid"></div>
+        </section>
+
+        <!-- Stock Detail Modal -->
+        <div id="stockModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="stockDetail"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>🔒 Dữ liệu từ SSI FastConnect API · Phân tích kỹ thuật tự động</p>
+        <p class="disclaimer">⚠️ Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư</p>
+    </footer>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
