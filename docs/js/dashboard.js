@@ -2,18 +2,34 @@ let data = null;
 let breadthChart = null;
 let signalChart = null;
 
+function showError(msg) {
+    const el = document.getElementById('stockGrid');
+    if (el) el.innerHTML = '<div class="error" style="padding:20px;background:#1a0a0a;border:1px solid #f44336;border-radius:8px;margin:10px 0">❌ ' + msg + '</div>';
+    const lu = document.getElementById('lastUpdate');
+    if (lu) lu.textContent = '⚠️ Lỗi: ' + msg;
+}
+
 function loadData() {
-    data = window._STOCK_DATA;
-    if (data) {
-        renderDashboard();
-    } else {
-        document.getElementById('stockGrid').innerHTML =
-            '<div class="error">❌ Không thể tải dữ liệu. Chạy <b>python export_data.py</b> trước.</div>';
-        document.getElementById('lastUpdate').textContent = '⚠️ Chưa có dữ liệu';
+    try {
+        data = window._STOCK_DATA;
+        if (data) {
+            const bak = document.createElement('div');
+            bak.id = 'dataLoadedBadge';
+            bak.style.cssText = 'position:fixed;top:4px;right:4px;background:#0f730f;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;z-index:9999';
+            bak.textContent = '✓ DATA LOADED';
+            document.body.appendChild(bak);
+            renderDashboard();
+        } else {
+            showError('window._STOCK_DATA = null/undefined. Kiểm tra file <b>data/data.js</b> trên GitHub.');
+        }
+    } catch (e) {
+        showError('JavaScript error: ' + e.message + ' (line ' + (e.lineNumber || '?') + ')');
+        console.error(e);
     }
 }
 
 function renderDashboard() {
+    try {
     if (!data) return;
     const { market_index, market_breadth, stocks, exported_at } = data;
 
@@ -54,6 +70,10 @@ function renderDashboard() {
 
     // Stocks
     renderStocks();
+    } catch (e) {
+        showError('renderDashboard: ' + e.message);
+        console.error(e);
+    }
 }
 
 function renderBreadthChart(breadth) {
@@ -111,6 +131,7 @@ function renderSignalChart(breadth) {
 }
 
 function renderStocks() {
+    try {
     if (!data || !data.stocks) return;
     const sortBy = document.getElementById('sortSelect').value;
     const search = document.getElementById('searchInput').value.toUpperCase();
@@ -132,6 +153,10 @@ function renderStocks() {
 
     const grid = document.getElementById('stockGrid');
     grid.innerHTML = stocks.map(s => renderStockCard(s)).join('');
+    } catch (e) {
+        showError('renderStocks: ' + e.message);
+        console.error(e);
+    }
 }
 
 function renderStockCard(s) {
@@ -163,6 +188,7 @@ function renderStockCard(s) {
 }
 
 function showDetail(symbol) {
+    try {
     if (!data || !data.stocks || !data.stocks[symbol]) return;
     const s = data.stocks[symbol];
     const tech = s.technical || {};
@@ -257,6 +283,10 @@ function showDetail(symbol) {
     `;
 
     modal.style.display = 'block';
+    } catch (e) {
+        showError('showDetail: ' + e.message);
+        console.error(e);
+    }
 }
 
 function closeModal() {
