@@ -75,13 +75,20 @@ class DataExporter:
             "stocks": stock_data,
         }
 
-        # 5. Ghi file
-        filepath = os.path.join(self.output_dir, "analysis.json")
-        with open(filepath, "w", encoding="utf-8") as f:
+        # 5. Ghi file JSON (cho debug)
+        json_path = os.path.join(self.output_dir, "analysis.json")
+        with open(json_path, "w", encoding="utf-8") as f:
             json.dump(export, f, ensure_ascii=False, indent=2, default=str)
 
+        # 6. Ghi file JS (cho Safari/GitHub Pages - tránh lỗi fetch)
+        js_path = os.path.join(self.output_dir, "data.js")
+        js_content = "window._STOCK_DATA = " + json.dumps(export, ensure_ascii=False, default=str) + ";"
+        with open(js_path, "w", encoding="utf-8") as f:
+            f.write(js_content)
+
         print(f"\n✅ Hoàn tất! Dữ liệu đã được lưu tại:")
-        print(f"   {filepath}")
+        print(f"   {json_path}")
+        print(f"   {js_path}")
         print(f"   {sum(1 for s in stock_data if 'error' not in stock_data[s])}/{len(symbols)} mã thành công")
 
         return export

@@ -2,13 +2,11 @@ let data = null;
 let breadthChart = null;
 let signalChart = null;
 
-async function loadData() {
-    document.getElementById('stockGrid').innerHTML = '<div class="loading">🔄 Đang tải dữ liệu...</div>';
-    try {
-        const resp = await fetch('/stock-analysis/data/analysis.json?t=' + Date.now());
-        data = await resp.json();
+function loadData() {
+    data = window._STOCK_DATA;
+    if (data) {
         renderDashboard();
-    } catch (e) {
+    } else {
         document.getElementById('stockGrid').innerHTML =
             '<div class="error">❌ Không thể tải dữ liệu. Chạy <b>python export_data.py</b> trước.</div>';
         document.getElementById('lastUpdate').textContent = '⚠️ Chưa có dữ liệu';
