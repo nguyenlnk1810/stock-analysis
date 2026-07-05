@@ -3,99 +3,787 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Stock Analyst - Phân tích chứng khoán</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="css/style.css">
+    <title>AI Stock Analyst - Phân tích thị trường chứng khoán Việt Nam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>📈 AI Stock Analyst</h1>
-            <p class="subtitle">Hệ thống phân tích chứng khoán thông minh</p>
-            <div class="last-update" id="lastUpdate">Đang tải...</div>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">AI Stock Analyst</div>
+            <div class="loader-sub">Đang tải dữ liệu thị trường...</div>
         </div>
-    </header>
+    </div>
 
-    <main class="container">
-        <!-- Market Overview -->
-        <section class="card" id="marketOverview">
-            <h2>📊 Tổng quan thị trường</h2>
-            <div class="market-grid" id="marketGrid">
-                <div class="metric">
-                    <span class="label">VN-Index</span>
-                    <span class="value" id="idxPrice">--</span>
-                    <span class="change" id="idxChange">--</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Mã tăng</span>
-                    <span class="value green" id="breadthAdv">--</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Mã giảm</span>
-                    <span class="value red" id="breadthDec">--</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Trên MA20</span>
-                    <span class="value" id="aboveMA20">--</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Trên MA50</span>
-                    <span class="value" id="aboveMA50">--</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Tín hiệu Mua/Bán</span>
-                    <span class="value" id="netSignal">--</span>
-                </div>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-chart-line"></i>
+                <span class="logo-text">AI Analyst</span>
             </div>
-        </section>
+            <button class="sidebar-collapse" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
 
-        <!-- Breadth Chart -->
-        <section class="card">
-            <h2>📊 Độ rộng thị trường</h2>
-            <div class="chart-row">
-                <div class="chart-box">
-                    <canvas id="breadthChart"></canvas>
-                </div>
-                <div class="chart-box">
-                    <canvas id="signalChart"></canvas>
-                </div>
-            </div>
-        </section>
+        <div class="sidebar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Tìm mã cổ phiếu..." oninput="searchSymbol(this.value)">
+        </div>
 
-        <!-- Stock List -->
-        <section class="card">
-            <h2>📋 Danh sách cổ phiếu phân tích</h2>
-            <div class="controls">
-                <input type="text" id="searchInput" placeholder="Tìm mã cổ phiếu..." oninput="filterStocks()">
-                <select id="sortSelect" onchange="renderStocks()">
-                    <option value="score">Sắp xếp: Điểm số</option>
-                    <option value="symbol">Sắp xếp: Mã</option>
-                    <option value="price">Sắp xếp: Giá</option>
-                    <option value="change">Sắp xếp: Thay đổi</option>
-                </select>
-                <button onclick="refreshData()" class="btn-refresh">🔄 Làm mới</button>
-            </div>
-            <div class="stock-grid" id="stockGrid"></div>
-        </section>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Tổng quan</div>
+            <a class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
 
-        <!-- Stock Detail Modal -->
-        <div id="stockModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <div id="stockDetail"></div>
+            <div class="nav-section-label">Thị trường</div>
+            <a class="nav-item" data-tab="market-overview" onclick="switchTab('market-overview')">
+                <i class="fas fa-chart-bar"></i>
+                <span>Tổng quan thị trường</span>
+            </a>
+            <a class="nav-item" data-tab="trading-stats" onclick="switchTab('trading-stats')">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Thống kê giao dịch</span>
+            </a>
+            <a class="nav-item" data-tab="market-report" onclick="switchTab('market-report')">
+                <i class="fas fa-newspaper"></i>
+                <span>Nhận định thị trường</span>
+            </a>
+            <a class="nav-item" data-tab="cashflow" onclick="switchTab('cashflow')">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Dòng tiền</span>
+            </a>
+            <a class="nav-item" data-tab="market-breadth" onclick="switchTab('market-breadth')">
+                <i class="fas fa-layer-group"></i>
+                <span>Độ rộng thị trường</span>
+            </a>
+
+            <div class="nav-section-label">Phân tích</div>
+            <a class="nav-item" data-tab="sectors" onclick="switchTab('sectors')">
+                <i class="fas fa-building"></i>
+                <span>Phân tích ngành</span>
+            </a>
+            <a class="nav-item" data-tab="foreign" onclick="switchTab('foreign')">
+                <i class="fas fa-globe-asia"></i>
+                <span>Khối ngoại</span>
+            </a>
+            <a class="nav-item" data-tab="proprietary" onclick="switchTab('proprietary')">
+                <i class="fas fa-university"></i>
+                <span>Tự doanh</span>
+            </a>
+            <a class="nav-item" data-tab="signals" onclick="switchTab('signals')">
+                <i class="fas fa-bolt"></i>
+                <span>Top tín hiệu</span>
+            </a>
+
+            <div class="nav-section-label">Cá nhân</div>
+            <a class="nav-item" data-tab="watchlist" onclick="switchTab('watchlist')">
+                <i class="fas fa-star"></i>
+                <span>Watchlist</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-status" id="sidebarStatus">
+                <span class="status-dot"></span>
+                <span>Dữ liệu: <span id="lastUpdateSidebar">--</span></span>
             </div>
         </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <span class="header-date" id="headerDate"></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="ai-recommendation-badge" id="aiBadge" onclick="switchTab('dashboard')">
+                    <i class="fas fa-robot"></i>
+                    <span id="aiBadgeText">Đang tải...</span>
+                </div>
+                <button class="btn-refresh" onclick="refreshData()" title="Làm mới dữ liệu">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- TAB 0: Dashboard (Tổng quan) -->
+            <section class="tab-content active" id="tab-dashboard">
+                <!-- AI Recommendation Hero -->
+                <div class="ai-hero" id="aiHero">
+                    <div class="ai-hero-bg"></div>
+                    <div class="ai-hero-content">
+                        <div class="ai-hero-header">
+                            <div class="ai-hero-icon"><i class="fas fa-robot"></i></div>
+                            <div class="ai-hero-title">
+                                <h2>Khuyến nghị AI</h2>
+                                <span id="aiHeroDate">Hôm nay</span>
+                            </div>
+                        </div>
+                        <div class="ai-hero-action" id="aiHeroAction">
+                            <span class="action-badge">--</span>
+                        </div>
+                        <div class="ai-hero-score" id="aiHeroScore">
+                            <div class="score-ring">
+                                <svg viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="42" class="score-ring-bg"/>
+                                    <circle cx="50" cy="50" r="42" class="score-ring-fill" id="scoreRing"/>
+                                </svg>
+                                <span class="score-value" id="scoreValue">--</span>
+                            </div>
+                            <div class="score-label">Điểm thị trường</div>
+                        </div>
+                        <div class="ai-hero-reason" id="aiHeroReason">
+                            Đang phân tích thị trường...
+                        </div>
+                        <div class="ai-hero-stats">
+                            <div class="hero-stat">
+                                <span class="stat-label">RSI</span>
+                                <span class="stat-value" id="heroRsi">--</span>
+                            </div>
+                            <div class="hero-stat">
+                                <span class="stat-label">Fear & Greed</span>
+                                <span class="stat-value" id="heroFearGreed">--</span>
+                            </div>
+                            <div class="hero-stat">
+                                <span class="stat-label">Độ rộng</span>
+                                <span class="stat-value" id="heroBreadth">--</span>
+                            </div>
+                            <div class="hero-stat">
+                                <span class="stat-label">Thanh khoản</span>
+                                <span class="stat-value" id="heroVolume">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <div class="card card-vnindex">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-simple"></i> VN-Index</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="index-price" id="idxPrice">--</div>
+                            <div class="index-change" id="idxChange">--</div>
+                            <div class="index-chart-wrapper">
+                                <canvas id="vnindexMiniChart"></canvas>
+                            </div>
+                            <div class="index-details">
+                                <div class="detail-item">
+                                    <span class="label">Mở cửa</span>
+                                    <span class="value" id="idxOpen">--</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Cao nhất</span>
+                                    <span class="value" id="idxHigh">--</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Thấp nhất</span>
+                                    <span class="value" id="idxLow">--</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">KLGD</span>
+                                    <span class="value" id="idxVolume">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-breadth">
+                        <div class="card-header">
+                            <h3><i class="fas fa-layer-group"></i> Độ rộng thị trường</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="breadth-summary">
+                                <div class="breadth-item advancing">
+                                    <div class="breadth-icon"><i class="fas fa-arrow-up"></i></div>
+                                    <div class="breadth-info">
+                                        <span class="breadth-label">Tăng</span>
+                                        <span class="breadth-value" id="breadthAdv">--</span>
+                                    </div>
+                                </div>
+                                <div class="breadth-item declining">
+                                    <div class="breadth-icon"><i class="fas fa-arrow-down"></i></div>
+                                    <div class="breadth-info">
+                                        <span class="breadth-label">Giảm</span>
+                                        <span class="breadth-value" id="breadthDec">--</span>
+                                    </div>
+                                </div>
+                                <div class="breadth-item unchanged">
+                                    <div class="breadth-icon"><i class="fas fa-minus"></i></div>
+                                    <div class="breadth-info">
+                                        <span class="breadth-label">Đứng</span>
+                                        <span class="breadth-value" id="breadthUnch">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="breadth-chart-wrapper">
+                                <canvas id="breadthDonut"></canvas>
+                            </div>
+                            <div class="breadth-stats">
+                                <div class="stat-row">
+                                    <span>Trên MA20</span>
+                                    <span id="brMA20">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>Trên MA50</span>
+                                    <span id="brMA50">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>Trên MA200</span>
+                                    <span id="brMA200">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>RSI &gt; 50</span>
+                                    <span id="brRSI50">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-signals">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Tín hiệu kỹ thuật</h3>
+                            <span class="card-badge" id="signalCount">0</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="signal-list" id="signalList">
+                                <div class="signal-placeholder">Đang tải dữ liệu...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-top-stocks">
+                        <div class="card-header">
+                            <h3><i class="fas fa-trophy"></i> Top cổ phiếu</h3>
+                            <div class="card-tabs">
+                                <button class="card-tab active" onclick="switchTopList('gainers')">Tăng mạnh</button>
+                                <button class="card-tab" onclick="switchTopList('losers')">Giảm mạnh</button>
+                                <button class="card-tab" onclick="switchTopList('volume')">KL lớn</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="top-list" id="topList"></div>
+                        </div>
+                    </div>
+
+                    <div class="card card-sectors-mini">
+                        <div class="card-header">
+                            <h3><i class="fas fa-building"></i> Nhóm ngành</h3>
+                            <a href="#" onclick="switchTab('sectors');return false" class="card-link">Xem tất cả</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="sector-list" id="sectorMiniList">
+                                <div class="sector-placeholder">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-news">
+                        <div class="card-header">
+                            <h3><i class="fas fa-newspaper"></i> Tin tức nổi bật</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="news-list" id="newsList">
+                                <div class="sector-placeholder">Đang tải tin tức...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: Market Overview -->
+            <section class="tab-content" id="tab-market-overview">
+                <div class="tab-header">
+                    <h2>Tổng quan thị trường</h2>
+                    <p>Phân tích toàn cảnh thị trường chứng khoán Việt Nam</p>
+                </div>
+                <div class="overview-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>VN-Index</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="vnindexFullChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Chỉ số thị trường</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="index-table" id="indexTable"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Thống kê nhanh</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-stats" id="quickStats"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Trading Stats -->
+            <section class="tab-content" id="tab-trading-stats">
+                <div class="tab-header">
+                    <h2>Thống kê giao dịch</h2>
+                    <p>10 phiên giao dịch gần nhất</p>
+                </div>
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h3>Bảng thống kê</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table" id="tradingTable">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>VN-Index</th>
+                                        <th>Thay đổi</th>
+                                        <th>%</th>
+                                        <th>KLGD</th>
+                                        <th>GTGD</th>
+                                        <th>Tăng</th>
+                                        <th>Giảm</th>
+                                        <th>Đứng</th>
+                                        <th>NN ròng</th>
+                                        <th>TD ròng</th>
+                                        <th>Thỏa thuận</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradingBody">
+                                    <tr><td colspan="12" class="empty-row">Chưa có dữ liệu</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Market Report -->
+            <section class="tab-content" id="tab-market-report">
+                <div class="tab-header">
+                    <h2>Nhận định thị trường</h2>
+                    <p>Báo cáo phân tích thị trường hàng ngày</p>
+                </div>
+                <div class="report-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-file-alt"></i> Báo cáo thị trường</h3>
+                            <span class="card-badge" id="reportDate">--</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="report-table" id="reportTable"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Độ rộng thị trường</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="breadth-detailed" id="breadthDetailed"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-brain"></i> Tâm lý thị trường</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="sentiment-section" id="sentimentSection"></div>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-robot"></i> Nhận định AI</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="ai-report" id="aiReport">
+                                <div class="report-placeholder">Đang tạo báo cáo AI...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Cashflow -->
+            <section class="tab-content" id="tab-cashflow">
+                <div class="tab-header">
+                    <h2>Dòng tiền thị trường</h2>
+                    <p>Phân tích dòng tiền theo nhóm ngành</p>
+                </div>
+                <div class="cashflow-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Treemap dòng tiền</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="treemap-container" id="treemapContainer">
+                                <canvas id="treemapChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Heatmap ngành</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="heatmap-container" id="heatmapContainer"></div>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Bảng xếp hạng ngành</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="sectorTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Ngành</th>
+                                            <th>Dòng tiền (tỷ)</th>
+                                            <th>Hiệu suất</th>
+                                            <th>Thanh khoản</th>
+                                            <th>Sức mạnh</th>
+                                            <th>Momentum</th>
+                                            <th>Xu hướng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sectorBody">
+                                        <tr><td colspan="7" class="empty-row">Chưa có dữ liệu</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: Market Breadth -->
+            <section class="tab-content" id="tab-market-breadth">
+                <div class="tab-header">
+                    <h2>Độ rộng thị trường</h2>
+                    <p>Thống kê chi tiết theo từng sàn</p>
+                </div>
+                <div class="breadth-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-database"></i> Toàn thị trường</h3>
+                        </div>
+                        <div class="card-body" id="breadthAll"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-building"></i> HOSE</h3>
+                        </div>
+                        <div class="card-body" id="breadthHOSE"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-industry"></i> HNX</h3>
+                        </div>
+                        <div class="card-body" id="breadthHNX"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> UPCOM</h3>
+                        </div>
+                        <div class="card-body" id="breadthUPCOM"></div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Biểu đồ độ rộng</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="breadthChartFull"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: Sectors -->
+            <section class="tab-content" id="tab-sectors">
+                <div class="tab-header">
+                    <h2>Phân tích ngành</h2>
+                    <p>Đánh giá hiệu suất và dòng tiền theo nhóm ngành</p>
+                </div>
+                <div class="sectors-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Biểu đồ xoay vòng ngành</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="sectorRotationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Bubble Chart</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="sectorBubbleChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: Foreign -->
+            <section class="tab-content" id="tab-foreign">
+                <div class="tab-header">
+                    <h2>Giao dịch khối ngoại</h2>
+                    <p>Phân tích hoạt động mua bán của nhà đầu tư nước ngoài</p>
+                </div>
+                <div class="foreign-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Biểu đồ giao dịch ròng</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="foreignChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Top mua/bán ròng</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="foreign-tables">
+                                <div class="foreign-table-section">
+                                    <h4>Mua ròng nhiều nhất</h4>
+                                    <div class="table-responsive">
+                                        <table class="data-table" id="foreignBuyTable">
+                                            <thead>
+                                                <tr><th>Mã</th><th>Giá trị (tỷ)</th><th>KL</th></tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="foreign-table-section">
+                                    <h4>Bán ròng nhiều nhất</h4>
+                                    <div class="table-responsive">
+                                        <table class="data-table" id="foreignSellTable">
+                                            <thead>
+                                                <tr><th>Mã</th><th>Giá trị (tỷ)</th><th>KL</th></tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 8: Proprietary Trading -->
+            <section class="tab-content" id="tab-proprietary">
+                <div class="tab-header">
+                    <h2>Giao dịch tự doanh</h2>
+                    <p>Phân tích hoạt động của công ty chứng khoán</p>
+                </div>
+                <div class="proprietary-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Giao dịch ròng tự doanh</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="proprietaryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Top mua/bán tự doanh</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="foreign-tables">
+                                <div class="foreign-table-section">
+                                    <h4>Mua ròng nhiều nhất</h4>
+                                    <table class="data-table" id="proprietaryBuyTable">
+                                        <thead><tr><th>Mã</th><th>Giá trị (tỷ)</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <div class="foreign-table-section">
+                                    <h4>Bán ròng nhiều nhất</h4>
+                                    <table class="data-table" id="proprietarySellTable">
+                                        <thead><tr><th>Mã</th><th>Giá trị (tỷ)</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 9: Technical Signals -->
+            <section class="tab-content" id="tab-signals">
+                <div class="tab-header">
+                    <h2>Top tín hiệu kỹ thuật</h2>
+                    <p>Phát hiện cổ phiếu có tín hiệu kỹ thuật nổi bật</p>
+                </div>
+                <div class="signals-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <div class="signals-filter">
+                                <button class="filter-btn active" data-filter="all" onclick="filterSignals('all')">Tất cả</button>
+                                <button class="filter-btn" data-filter="breakout" onclick="filterSignals('breakout')">Breakout</button>
+                                <button class="filter-btn" data-filter="macd_bullish" onclick="filterSignals('macd_bullish')">MACD cắt lên</button>
+                                <button class="filter-btn" data-filter="rsi_bullish" onclick="filterSignals('rsi_bullish')">RSI > 50</button>
+                                <button class="filter-btn" data-filter="volume_spike" onclick="filterSignals('volume_spike')">KL đột biến</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="signalsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã</th>
+                                            <th>Tín hiệu</th>
+                                            <th>Giá</th>
+                                            <th>Thay đổi</th>
+                                            <th>RSI</th>
+                                            <th>MACD</th>
+                                            <th>KL đột biến</th>
+                                            <th>Điểm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="signalsBody">
+                                        <tr><td colspan="8" class="empty-row">Chưa có dữ liệu</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 10: Watchlist -->
+            <section class="tab-content" id="tab-watchlist">
+                <div class="tab-header">
+                    <h2>Danh mục theo dõi</h2>
+                    <p>Watchlist cá nhân</p>
+                </div>
+                <div class="watchlist-grid">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-star"></i> Watchlist của tôi</h3>
+                            <div class="watchlist-actions">
+                                <button class="btn-secondary" onclick="showAddToWatchlist()">
+                                    <i class="fas fa-plus"></i> Thêm mã
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table" id="watchlistTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã</th>
+                                            <th>Giá</th>
+                                            <th>Thay đổi</th>
+                                            <th>Giá mua</th>
+                                            <th>Lãi/lỗ</th>
+                                            <th>RSI</th>
+                                            <th>Tín hiệu</th>
+                                            <th>Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="watchlistBody">
+                                        <tr><td colspan="8" class="empty-row">Chưa có cổ phiếu trong danh sách theo dõi. Nhấn "Thêm mã" để bắt đầu.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>AI Stock Analyst &copy; 2026 | Dữ liệu từ SSI FastConnect API</p>
+            <p class="disclaimer">Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư</p>
+        </footer>
     </main>
 
-    <footer>
-        <p>🔒 Dữ liệu từ SSI FastConnect API · Phân tích kỹ thuật tự động</p>
-        <p class="disclaimer">⚠️ Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư</p>
-    </footer>
+    <!-- Add to Watchlist Modal -->
+    <div id="watchlistModal" class="modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Thêm vào Watchlist</h3>
+                <span class="close" onclick="closeModal('watchlistModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Mã cổ phiếu</label>
+                    <input type="text" id="watchlistSymbolInput" placeholder="VD: SSI, VNM, FPT..." oninput="suggestSymbols(this.value)">
+                    <div class="suggestions" id="symbolSuggestions"></div>
+                </div>
+                <div class="form-group">
+                    <label>Giá mua (không bắt buộc)</label>
+                    <input type="number" id="watchlistBuyPrice" placeholder="Nhập giá mua để tính lãi/lỗ">
+                </div>
+                <button class="btn-primary" onclick="addToWatchlist()">Thêm</button>
+            </div>
+        </div>
+    </div>
 
-    <script>window._STOCK_DATA = {"exported_at": "2026-07-05T20:38:29.581586", "market_index": {}, "market_breadth": {"summary": {"total": 6, "advancing": 1, "declining": 4, "unchanged": 1, "breadth_ratio": 0.25, "breadth_pct": 16.67, "above_ma20": 4, "above_ma20_pct": 66.67, "above_ma50": 6, "above_ma50_pct": 100.0, "rsi_oversold": 1, "rsi_overbought": 0, "high_volume": 0, "buy_signals": 1, "sell_signals": 0, "net_signal": 1}, "stocks": [{"symbol": "VNM", "price": 54900.0, "change": -1.08, "rsi": 24.2, "action": "TÍCH LŨY", "score": 2, "volume_ratio": 1.44, "ma20_pct": -5.0, "ma50_pct": 0}, {"symbol": "SSI", "price": 27350.0, "change": 0.92, "rsi": 58.3, "action": "NẮM GIỮ", "score": 0, "volume_ratio": 1.47, "ma20_pct": 1.77, "ma50_pct": 0}, {"symbol": "FPT", "price": 72300.0, "change": -0.28, "rsi": 47.89, "action": "NẮM GIỮ", "score": 0, "volume_ratio": 0.99, "ma20_pct": 0.28, "ma50_pct": 0}, {"symbol": "HPG", "price": 23250.0, "change": -0.64, "rsi": 42.12, "action": "NẮM GIỮ", "score": 0, "volume_ratio": 0.96, "ma20_pct": -1.29, "ma50_pct": 0}, {"symbol": "MWG", "price": 78900.0, "change": -1.0, "rsi": 53.31, "action": "NẮM GIỮ", "score": 0, "volume_ratio": 0.8, "ma20_pct": 1.0, "ma50_pct": 0}, {"symbol": "VIC", "price": 220300.0, "change": 0.0, "rsi": 58.89, "action": "NẮM GIỮ", "score": 0, "volume_ratio": 0.64, "ma20_pct": 5.09, "ma50_pct": 0}], "analyzed_at": "2026-07-05T20:38:29.020787"}, "stocks": {"VNINDEX": {"symbol": "VNINDEX", "error": "API error /api/v2/Market/DailyStockPrice: There is no data"}, "VCB": {"symbol": "VCB", "error": "API error /api/v2/Market/DailyStockPrice: API calls quota exceeded! maximum admitted 1 per 1s."}, "SSI": {"symbol": "SSI", "company_name": "CTCP CHUNG KHOAN SSI", "exchange": "HOSE", "industry": "S", "technical": {"action": "NẮM GIỮ", "score": 0, "confidence": "thấp", "signals": ["MACD histogram âm (bearish)", "Giá trên MA20 (+1.77%)", "Khối ngoại bán ròng hôm nay (26.58 tỷ)"], "indicators": {"ma_5": 27000.0, "ma_5_slope": 1.47, "ma_10": 26865.0, "ma_10_slope": -0.57, "ma_20": 26875.0, "ma_20_slope": NaN, "price_vs_ma20_pct": 1.77, "price_vs_ma50_pct": 0, "current_price": 27350.0, "ema_20": 26942.23, "rsi_14": 58.3, "rsi_signal": "neutral", "rsi_trend": "tăng", "rsi_divergence": "none", "rsi_7": 64.71, "rsi_21": 56.47, "stoch_k": 62.86, "stoch_d": 56.06, "stoch_signal": "neutral", "williams_r": -37.14, "williams_r_signal": "neutral", "bb_upper": 28001.04, "bb_middle": 26875.0, "bb_lower": 25748.96, "bb_width": 8.38, "bb_bandwidth_pct": 8.38, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.7109, "volume_current": 20102700, "volume_avg_20": 13637155, "volume_avg_50": 13637155, "volume_ratio": 1.47, "volume_signal": "bình thường", "obv": 28929100.0, "obv_trend": "tăng", "vpt": 5086.08, "vwap": 26983.1, "ad_line": -81.98, "foreign_net": -225.22, "foreign_buy_total": 662.05, "foreign_sell_total": 887.28, "foreign_net_today": -26.58, "total_value": 7616.76, "price_change_1d": 250.0, "price_change_pct_1d": 0.92, "price_change_5d": 750.0, "price_change_pct_5d": 2.82, "price_change_20d": 1000.0, "price_change_pct_20d": 3.8, "volatility_20d": 20.9, "var_95": -1.34, "max_drawdown": -4.69, "sharpe_ratio": 0.64, "beta": 0.0, "skewness": 0.72, "kurtosis": 1.22, "pivot_pp": 27266.67, "pivot_r1": 27583.33, "pivot_r2": 27816.67, "pivot_s1": 27033.33, "pivot_s2": 26716.67}}, "news": [{"title": "Tâm điểm mới của nhóm chứng khoán đã lộ diện, bao giờ cổ phiếu SSI, VND,... nhập cuộc? - nguoiquansat.vn", "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPNmZqNGU3UU5zbl95WTJUN1A2TC1RckhzYm1UUEEyNDNDNnU5UGx4c2RrcHhjZko2QUtBcU9jTmZJektTbkpDVUN0WnQxRm1WSTcxLXVERENHUllId1ZfRWdvMldscHZIbk1UaGJ6QmhieWExU25vUHdKTUtHMnZfNk9Rd3FsT3RzYWFFV3pSTGFTc1ZOODYyYU1nRTI4aFNZZTNBQWtjV2Q4X0FhMkNiS0pyQ3U0QQ?oc=5", "date": "Fri, 03 Jul 2026 13:37:01 GMT", "summary": "Tâm điểm mới của nhóm chứng khoán đã lộ diện, bao giờ cổ phiếu SSI, VND,... nhập cuộc?&nbsp;&nbsp;nguoiquansat.vn", "source": "google-news"}, {"title": "Soi định giá cổ phiếu chứng khoán khi đồng loạt bứt phá: Bất ngờ với SSI, SHS, VCI - CafeF", "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQUHh3Wi1HRUVBc25kVXAxdFhVTzJIb0czRXNSVXRzcklteUxxeWFCejZZTndXYmRpa2pMSDl3SDM4V0NaM1FMYkFRQjJlakpUWmlDS3RsZVlwYUhibEh4LUZjbVNxbWpieUZGNk5jUGxKN00wNmxEbXpwM2hCTV93bUZjUkJVQTF4X0ZGSVdESW5zT0U3RG9BcUVuSjNTYzFjOFZiYTIyMmJULXhMT0U4ODJIem5rQ1F3MUg4?oc=5", "date": "Sat, 04 Jul 2026 17:10:00 GMT", "summary": "Soi định giá cổ phiếu chứng khoán khi đồng loạt bứt phá: Bất ngờ với SSI, SHS, VCI&nbsp;&nbsp;CafeF", "source": "google-news"}, {"title": "Nhận định cổ phiếu ngày 2/7: Khuyến nghị gì cho MCH và PLC? - bnews.vn", "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNSm9xNkhyVWVHVERIcVVZM0YwX1R3bjhqTkNFbUNlcG1BZDROczdZbUJRb3JNdUdlbHFaeGhuMFFhRGsxdE9mdGhaYzFQbWxOVGpNQ1RTTUtXdkxjTUJ5Mkhia0RrR1pYTnc0b3dpeHBmNzg4c3pGYlFIdXNCREZKajhxcUE4TXhaSk5VQTlTUQ?oc=5", "date": "Thu, 02 Jul 2026 01:52:00 GMT", "summary": "Nhận định cổ phiếu ngày 2/7: Khuyến nghị gì cho MCH và PLC?&nbsp;&nbsp;bnews.vn", "source": "google-news"}, {"title": "SSI bổ sung 27 mã chứng quyền mới, tiếp tục mở rộng danh mục trên HOSE - Tin nhanh chứng khoán", "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPRHV4cUFHYk1fQUxxdllKMVRDZkZ5dE9jYTBkQU1JQ3ZzSGZ4RjVTcTVZYTEtWHRYbHI2d1RIQVFKc0pIemNRMF9OeGFQUEl6WVliRWJ6RkRxV0Nia01YdVdXRW50RThjSWI3UXRuXzI5MFpnSEdnQTFTaEM4SEZPQTVPaTVLS0hjbVBOa0tZVHpLNGZkYXNDU1oydkRmR0NGZXg2X0o2eUhaWmRnUlA2eFFvZzZ5WGt6a01j0gG3AUFVX3lxTFBRaFR1enRmYVNqV3h2cVBfWEhjLThWZWNEbFM0bDYzT0JUc1p5cEl1NWswMWNSMzZjbWE5TFBXV1lKTl9SRkhOS1ZZN0FoQm45eHFGR0kzY3kwNU9hdUN4d1g3VVpnQnR5LWRfUThxcE94R0R6d3QxQmczNDBBY0dkdUFxaGRRdGpYblZvNVFHQ0hVejd4ekFBdkpyNFhjZGZYRFRmQWd2QkpCYk1va1BpSDl4T21jQQ?oc=5", "date": "Mon, 29 Jun 2026 06:33:17 GMT", "summary": "SSI bổ sung 27 mã chứng quyền mới, tiếp tục mở rộng danh mục trên HOSE&nbsp;&nbsp;Tin nhanh chứng khoán", "source": "google-news"}, {"title": "Dự báo chứng khoán 2/7: Nhiều cổ phiếu được cập nhật định giá và khuyến nghị - hangthat.thuonghieucongluan.com.vn", "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNdGx6aGxlWVZRa2FYRTlQd3piWmEtTVpXa2o2am5FcnJ3Z2Y1Zjl4OWpFWnZKZkJaRTdhS1BtUGxUWUphVlVqTFF3dDEwcDZhRHdIZ2UxQkZpaXN0dmgzRnNOZ3JIMWI4Z2xQMkc0emUzdkNFc2ExSjM5cGpCVG5Ddko4eUNDV2JTSks3YWtSWXN1MGVpSnZEdlVOcFhJbEdkQnRYTWk5RE1Jc1RSaF9SRWwtVDFmXzRvcjBVUnFlaG5udGJ5Ym9BT3BSbw?oc=5", "date": "Thu, 02 Jul 2026 02:54:00 GMT", "summary": "Dự báo chứng khoán 2/7: Nhiều cổ phiếu được cập nhật định giá và khuyến nghị&nbsp;&nbsp;hangthat.thuonghieucongluan.com.vn", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU SSI - CTCP CHUNG KHOAN SSI**\n\n**Giá hiện tại**: 27,350.0\n**Tín hiệu**: NẮM GIỮ\n**RSI(14)**: 58.3 - Trung tính\n**MA20**: 26875.0 | **MA50**: 0\n**Giá/MA20**: Trên MA20\n\n**Chi tiết tín hiệu:**\n  • MACD histogram âm (bearish)\n  • Giá trên MA20 (+1.77%)\n  • Khối ngoại bán ròng hôm nay (26.58 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:07.241157"}, "FPT": {"symbol": "FPT", "company_name": "CTCP FPT", "exchange": "HOSE", "industry": "S", "technical": {"action": "NẮM GIỮ", "score": 0, "confidence": "thấp", "signals": ["MACD histogram âm (bearish)", "Giá trên MA20 (+0.28%)", "Khối ngoại mua ròng hôm nay (44.57 tỷ)"], "indicators": {"ma_5": 71660.0, "ma_5_slope": 1.27, "ma_10": 71230.0, "ma_10_slope": -0.1, "ma_20": 72095.0, "ma_20_slope": NaN, "price_vs_ma20_pct": 0.28, "price_vs_ma50_pct": 0, "current_price": 72300.0, "ema_20": 72212.11, "rsi_14": 47.89, "rsi_signal": "neutral", "rsi_trend": "giảm", "rsi_divergence": "none", "rsi_7": 56.3, "rsi_21": 44.84, "stoch_k": 53.66, "stoch_d": 51.87, "stoch_signal": "neutral", "williams_r": -46.34, "williams_r_signal": "neutral", "bb_upper": 75184.78, "bb_middle": 72095.0, "bb_lower": 69005.22, "bb_width": 8.57, "bb_bandwidth_pct": 8.57, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.5332, "volume_current": 7490500, "volume_avg_20": 7543525, "volume_avg_50": 7543525, "volume_ratio": 0.99, "volume_signal": "bình thường", "obv": -30556800.0, "obv_trend": "giảm", "vpt": 8007.74, "vwap": 72175.6, "ad_line": -57.01, "foreign_net": -2151.77, "foreign_buy_total": 1890.93, "foreign_sell_total": 4042.7, "foreign_net_today": 44.57, "total_value": 11722.86, "price_change_1d": -200.0, "price_change_pct_1d": -0.28, "price_change_5d": 1900.0, "price_change_pct_5d": 2.7, "price_change_20d": -600.0, "price_change_pct_20d": -0.82, "volatility_20d": 20.46, "var_95": -1.55, "max_drawdown": -5.39, "sharpe_ratio": -2.4, "beta": 0.01, "skewness": 1.23, "kurtosis": 4.8, "pivot_pp": 72366.67, "pivot_r1": 73033.33, "pivot_r2": 73766.67, "pivot_s1": 71633.33, "pivot_s2": 70966.67}}, "news": [{"title": "Nhìn lại diễn biến nhóm cổ phiếu được các công ty chứng khoán khuyến nghị tuần qua - Tin nhanh chứng khoán", "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxNTTBCSTBuUktPWFFYLUVlaXRCMnlMUHFXUFFmNUtXZEdMRld5UDR3TjVSUmZtbzlPMGZVUHpsaVlNTm04Z1dLSXJ1N3djaTRpbF9NbUZiVUJFRERpTHVaQTdxS2JuajB5aXNOQUdGOUMtWDhScFZxSF9YV0M3OWpOX3h4dFpDbHB1Nm40Rk5sYjZFUTNWUllQazRZbUxGSGZiQXY0YTZFV2lqbzZvWW1NOEplN2VoaFF5V2VlQVI1WkxsQjhFLURXX2JfZnLSAcgBQVVfeXFMTmNjcVZLZWZ4ZEtFTnpDU0xMU3czbHlrb1VhTXlpeGJDTzJua0dKZ3pncXBmYXNOZnoyUGhzOXQxQkc1WWo4YnhLaXBQOUstN1g4Tl9HTnpzVDM2blhpWTRNMHRyVFZjVGJlbHNiZHJGaEJkTExaSEljRndHSGJHa2JuQzZxRGJ1cmQ3amRkZ1E3R3MxLWI4YlVYRDByenpTOFVlak5FbDByZ0lSX2paaEZjWmxUek9GbmlmdnJsWG94LWRzQ1RRcHc?oc=5", "date": "Fri, 03 Jul 2026 11:39:58 GMT", "summary": "Nhìn lại diễn biến nhóm cổ phiếu được các công ty chứng khoán khuyến nghị tuần qua&nbsp;&nbsp;Tin nhanh chứng khoán", "source": "google-news"}, {"title": "Khối ngoại giảm bán, dòng tiền nội nhập cuộc: Cổ phiếu FPT qua vùng đáy ngắn hạn? - VietnamFinance", "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOc09hcXZScDFLaEJlT19UOHNuaTNEaUNPUU5XV3M2Mm5qN0ExLUc0MzdScnJOLVRCLVo5VHlPTDZVWllGSVdJQjBKdHk1OTlMNFJydFFjWElIS2FycldDTFpMY2RGaGh4dmFkdnhyRWVtMDJWbGRvMHVfMlVjYjRaVFVLaGZTY1pLTGhZUGN4aTRRSnRMTFRud0dNUWFjUENuTzF2RjN4bzdoTGZ4aHgxZHNGb21Sc1B2?oc=5", "date": "Thu, 02 Jul 2026 11:51:12 GMT", "summary": "Khối ngoại giảm bán, dòng tiền nội nhập cuộc: Cổ phiếu FPT qua vùng đáy ngắn hạn?&nbsp;&nbsp;VietnamFinance", "source": "google-news"}, {"title": "FPT phát hành 2,3 triệu cổ phiếu ESOP cho 9 cán bộ quản lý cấp cao - CafeF", "url": "https://news.google.com/rss/articles/CBMiekFVX3lxTE13aUhSa21hbzRBSEkzUUw4YkNlMFhOMFI3alZrNTQ1NDYwb2V5aFZJbnNKcEN5OUpYSGdfWGpMZFRCYXdnTDRtMkVjNzMwYy1EVERXcVJ2SVMwU1BGdkFac3dBRDVQRG1rRE5JRWN5cmMzUm9BVWdBYjJn?oc=5", "date": "Fri, 03 Jul 2026 07:20:00 GMT", "summary": "FPT phát hành 2,3 triệu cổ phiếu ESOP cho 9 cán bộ quản lý cấp cao&nbsp;&nbsp;CafeF", "source": "google-news"}, {"title": "VN-Index tăng hơn 7 điểm, cổ phiếu ngân hàng và FPT dẫn dắt thị trường - Tạp chí Tài chính Doanh nghiệp", "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNUnRHUGE3QWZmczFndWxJekEtM0ZWVl8xZHlER2V3RlFQSGdfb2s3VjhQWU00NnBraG1JeWtIVjVINFhBVzZXN3JtV1ExT3pfU3Z1VjhWV0JwSjBMdlc0ZkNvc3JkUExMLUR4dU5HQ0pDa0FXWDdFbnA1UTQtS1dLaTM4RmY4Z1JWWXpJZEw3X1BLamFnWkJOZFdoVHdkSlNQUUt5dEYweURFZnoyTWRqUUVjM1Q0MG8?oc=5", "date": "Wed, 01 Jul 2026 09:28:00 GMT", "summary": "VN-Index tăng hơn 7 điểm, cổ phiếu ngân hàng và FPT dẫn dắt thị trường&nbsp;&nbsp;Tạp chí Tài chính Doanh nghiệp", "source": "google-news"}, {"title": "Cổ phiếu ngân hàng và chứng khoán khởi sắc - Báo Dân trí", "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxPbmRBRFBMUDNaeWM2YjBMQXN3dzJCM0s4OElPVWlzNnhsQVFkQXllZWt6X3UxWEZYV3F2N0tvd0E3eEVJQkpYTG9ueFUyWVhZVmNTWXlGV09MajFwdjBxVE9TOGlLOUJzVER3UVNVVWQwMEdrbm9RWlFZeHkzM0EzT2hhS1FSZGFtb0ZrMkE3Yk5LWU1qdE9pOHF4Wk5Vdw?oc=5", "date": "Wed, 01 Jul 2026 09:50:15 GMT", "summary": "Cổ phiếu ngân hàng và chứng khoán khởi sắc&nbsp;&nbsp;Báo Dân trí", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU FPT - CTCP FPT**\n\n**Giá hiện tại**: 72,300.0\n**Tín hiệu**: NẮM GIỮ\n**RSI(14)**: 47.89 - Trung tính\n**MA20**: 72095.0 | **MA50**: 0\n**Giá/MA20**: Trên MA20\n\n**Chi tiết tín hiệu:**\n  • MACD histogram âm (bearish)\n  • Giá trên MA20 (+0.28%)\n  • Khối ngoại mua ròng hôm nay (44.57 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:09.761664"}, "HPG": {"symbol": "HPG", "company_name": "CTCP TAP DOAN HOA PHAT", "exchange": "HOSE", "industry": "S", "technical": {"action": "NẮM GIỮ", "score": 0, "confidence": "thấp", "signals": ["Stochastic quá bán (0.0)", "Williams %R quá bán", "MACD histogram âm (bearish)", "Giá dưới MA20 (-1.29%)", "Khối ngoại bán ròng hôm nay (40.54 tỷ)"], "indicators": {"ma_5": 23410.0, "ma_5_slope": -0.26, "ma_10": 23435.0, "ma_10_slope": -0.87, "ma_20": 23555.0, "ma_20_slope": NaN, "price_vs_ma20_pct": -1.29, "price_vs_ma50_pct": 0, "current_price": 23250.0, "ema_20": 23533.15, "rsi_14": 42.12, "rsi_signal": "neutral", "rsi_trend": "giảm", "rsi_divergence": "none", "rsi_7": 38.65, "rsi_21": 43.08, "stoch_k": 0.0, "stoch_d": 11.79, "stoch_signal": "oversold", "williams_r": -100.0, "williams_r_signal": "oversold", "bb_upper": 24308.01, "bb_middle": 23555.0, "bb_lower": 22801.99, "bb_width": 6.39, "bb_bandwidth_pct": 6.39, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.2975, "volume_current": 15935100, "volume_avg_20": 16647250, "volume_avg_50": 16647250, "volume_ratio": 0.96, "volume_signal": "bình thường", "obv": -81417200.0, "obv_trend": "giảm", "vpt": 5556.52, "vwap": 23614.09, "ad_line": -137.56, "foreign_net": -433.16, "foreign_buy_total": 962.68, "foreign_sell_total": 1395.84, "foreign_net_today": -40.54, "total_value": 8195.76, "price_change_1d": -150.0, "price_change_pct_1d": -0.64, "price_change_5d": -400.0, "price_change_pct_5d": -1.69, "price_change_20d": -50.0, "price_change_pct_20d": -0.21, "volatility_20d": 23.15, "var_95": -1.5, "max_drawdown": -4.52, "sharpe_ratio": -1.27, "beta": -0.0, "skewness": 2.22, "kurtosis": 7.29, "pivot_pp": 23333.33, "pivot_r1": 23416.67, "pivot_r2": 23583.33, "pivot_s1": 23166.67, "pivot_s2": 23083.33}}, "news": [{"title": "Cổ phiếu cần quan tâm ngày 3/7 - Tin nhanh chứng khoán", "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNTHlIcUtfclVpOXhzTFdLbThhT1UxQkowbFpUa1dWdlB5YVlPMUdSMjFIRXJubEpQejVuZG45angtTW1Xc1pYSUJ2YkpzSHNEa3l0LTdkc3AxdDB4cXZxSW41eERZQnU4dE5jV25CX25wNTNhOVZmaHRLVUEtbEEweHJhTC1tUdIBggFBVV95cUxNT3ZDQUZHR0owZlRCSkVRWUdHVW9idU1XamZUN09mUzFTQlA5RWtTNTVrcEhtWnZPR0FmQUJpaDN1WE9kODFaYW5Uc2VXSWc0eFFCMlBBWU94TUF2MXhZcmdCSTNhVWZ5X2lvY3ZvbTJWejdyejA3QVQtdmd4ODBjdklB?oc=5", "date": "Thu, 02 Jul 2026 10:32:00 GMT", "summary": "Cổ phiếu cần quan tâm ngày 3/7&nbsp;&nbsp;Tin nhanh chứng khoán", "source": "google-news"}, {"title": "Một số cổ phiếu cần quan tâm 2/7: Cơ hội đầu tư tiềm năng với HPG và PLC - VOV.VN", "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOZ0EzMnAtNTRqcHdMX09zYTBLTmNfZjhtN3BqYm5LbmVtYW1kb3hBb3duR2h4SWwzQ0EtU2RXMlZpTTZabVBqSjFvUU42azlLSzNQbE5ZVzdjVHdkVWcwVGxFVmVURmVLSUdEcTYzWlcwdlFseGp4VXB0X2JSeWRMWGVKZEp6TlNheW1oUjFGQzdJYjIxaVNSYTNrdTdrbWs1Sy1TbWJDeXNSbGJvZ2xpSjVR?oc=5", "date": "Wed, 01 Jul 2026 22:00:00 GMT", "summary": "Một số cổ phiếu cần quan tâm 2/7: Cơ hội đầu tư tiềm năng với HPG và PLC&nbsp;&nbsp;VOV.VN", "source": "google-news"}, {"title": "Dự báo chứng khoán 2/7: Nhiều cổ phiếu được cập nhật định giá và khuyến nghị - hangthat.thuonghieucongluan.com.vn", "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNdGx6aGxlWVZRa2FYRTlQd3piWmEtTVpXa2o2am5FcnJ3Z2Y1Zjl4OWpFWnZKZkJaRTdhS1BtUGxUWUphVlVqTFF3dDEwcDZhRHdIZ2UxQkZpaXN0dmgzRnNOZ3JIMWI4Z2xQMkc0emUzdkNFc2ExSjM5cGpCVG5Ddko4eUNDV2JTSks3YWtSWXN1MGVpSnZEdlVOcFhJbEdkQnRYTWk5RE1Jc1RSaF9SRWwtVDFmXzRvcjBVUnFlaG5udGJ5Ym9BT3BSbw?oc=5", "date": "Thu, 02 Jul 2026 02:54:00 GMT", "summary": "Dự báo chứng khoán 2/7: Nhiều cổ phiếu được cập nhật định giá và khuyến nghị&nbsp;&nbsp;hangthat.thuonghieucongluan.com.vn", "source": "google-news"}, {"title": "Chuyển động tại quỹ ngoại tỷ USD: Bán mạnh cổ phiếu 'vua', mua HPG, FPT, MWG - Znews", "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOaWRBS21lNmhrSllfdDljaHMxU2tkUkVLTjNmd2xDMHVYVEFjRW1ZVlg2TksxemE0dWtrclpOblJYNGwzTDdDQlUxNE0tUzNacFdRR25MTl8xRjc3T00yRzdjRnhJOHBFV0dVY2h5VUFld0g1U1lBVFJPYTdfNEJ2OUZuNnJXdWU4N3VtMHdMRWpZUVU3Y2YwY0ZOby13OUJWRDdobHNuVQ?oc=5", "date": "Tue, 30 Jun 2026 12:00:39 GMT", "summary": "Chuyển động tại quỹ ngoại tỷ USD: Bán mạnh cổ phiếu 'vua', mua HPG, FPT, MWG&nbsp;&nbsp;Znews", "source": "google-news"}, {"title": "Cổ phiếu HPG được \"gọi tên\" cho nửa cuối 2026, tiềm năng tăng giá hơn 41% - 24HMoney", "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOY1lpMi1MNjhYRzc1ZTJfS2tWR2ZYRHkzb09GTU5WdVB0UXE4VDF3RjJkckFLVFFUT09WUEFEc0szWEVza25zZXBTbjV1RGN1dHJCOGVRLU51TFRiSk1YeEVIdXRrOUp2NEgtVFZVdGNLbUhLbldMZjhrdFNManoyZi11V2FJeW9mTllfaHdKM3prZ2Vhd1UyZExHUkRCaUp0T0xnRVM5amtybG1feXVR?oc=5", "date": "Thu, 02 Jul 2026 02:25:48 GMT", "summary": "Cổ phiếu HPG được \"gọi tên\" cho nửa cuối 2026, tiềm năng tăng giá hơn 41%&nbsp;&nbsp;24HMoney", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU HPG - CTCP TAP DOAN HOA PHAT**\n\n**Giá hiện tại**: 23,250.0\n**Tín hiệu**: NẮM GIỮ\n**RSI(14)**: 42.12 - Trung tính\n**MA20**: 23555.0 | **MA50**: 0\n**Giá/MA20**: Dưới MA20\n\n**Chi tiết tín hiệu:**\n  • Stochastic quá bán (0.0)\n  • Williams %R quá bán\n  • MACD histogram âm (bearish)\n  • Giá dưới MA20 (-1.29%)\n  • Khối ngoại bán ròng hôm nay (40.54 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:12.060649"}, "MWG": {"symbol": "MWG", "company_name": "CTCP DT THE GIOI DI DONG", "exchange": "HOSE", "industry": "S", "technical": {"action": "NẮM GIỮ", "score": 0, "confidence": "thấp", "signals": ["MACD histogram âm (bearish)", "Giá trên MA20 (+1.0%)", "Khối ngoại bán ròng hôm nay (56.58 tỷ)"], "indicators": {"ma_5": 79140.0, "ma_5_slope": 1.85, "ma_10": 78240.0, "ma_10_slope": 0.19, "ma_20": 78115.0, "ma_20_slope": NaN, "price_vs_ma20_pct": 1.0, "price_vs_ma50_pct": 0, "current_price": 78900.0, "ema_20": 78359.17, "rsi_14": 53.31, "rsi_signal": "neutral", "rsi_trend": "tăng", "rsi_divergence": "none", "rsi_7": 53.34, "rsi_21": 53.06, "stoch_k": 60.94, "stoch_d": 78.12, "stoch_signal": "neutral", "williams_r": -39.06, "williams_r_signal": "neutral", "bb_upper": 80985.4, "bb_middle": 78115.0, "bb_lower": 75244.6, "bb_width": 7.35, "bb_bandwidth_pct": 7.35, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.6367, "volume_current": 3276600, "volume_avg_20": 4082005, "volume_avg_50": 4082005, "volume_ratio": 0.8, "volume_signal": "bình thường", "obv": -8263100.0, "obv_trend": "giảm", "vpt": 4472.83, "vwap": 78068.83, "ad_line": 4.39, "foreign_net": -172.27, "foreign_buy_total": 608.61, "foreign_sell_total": 780.88, "foreign_net_today": -56.58, "total_value": 6624.69, "price_change_1d": -800.0, "price_change_pct_1d": -1.0, "price_change_5d": -100.0, "price_change_pct_5d": -0.13, "price_change_20d": 2500.0, "price_change_pct_20d": 3.27, "volatility_20d": 25.22, "var_95": -1.68, "max_drawdown": -4.28, "sharpe_ratio": 0.49, "beta": 0.0, "skewness": 0.94, "kurtosis": 0.24, "pivot_pp": 78933.33, "pivot_r1": 79566.67, "pivot_r2": 80233.33, "pivot_s1": 78266.67, "pivot_s2": 77633.33}}, "news": [{"title": "IPO Điện Máy Xanh chưa giúp cổ phiếu MWG đổi vận - Tin nhanh chứng khoán", "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNMUMwRExTTGJ2cGZYSjU3bDRoNlJuSGR6U1BaeDYwV2ktWTlITFUwOENMaUVteFZGT2xSbG9JYmxpalUwNTdMYjhpbUROcE5DM0xFWms4QUZfU0FSVzZuQzJZMG1qNDhLakRpNGZiVkpwaGlZdTdxNkt6RS1mclhUekRFNmZiTGRlM1dqNUNoRmZJUjkyYURSSGRrbUR5M0nSAZsBQVVfeXFMUGhwbGhUVXB5eHhfQ1k0TjRvN0RMMXpsMVRiRnJPdkRWUFAyRzN4Y1c5dGgxb1ZGb3RTSjZnWUNIS1FpdXVHTGNzMjRPUTFiblVyeTNDM0FKV214bGFRYmpTcENwY0dNRkJIUEtLYXdNandhNFRRQkoyTzNoWWVXeUNFOW1qVEJyTndsZ01wdXJub1B5eTVQc0ZuTTQ?oc=5", "date": "Mon, 29 Jun 2026 04:39:38 GMT", "summary": "IPO Điện Máy Xanh chưa giúp cổ phiếu MWG đổi vận&nbsp;&nbsp;Tin nhanh chứng khoán", "source": "google-news"}, {"title": "Thế giới Di động (MWG) chào bán cổ phiếu ESOP giá 10.000 đồng, dàn lãnh đạo chi hàng tỷ đồng gom mua - Báo Pháp Luật Việt Nam", "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNWUt1MmtGYXFhUFBBOHdFd1BRTzRsR2lzQS00ZTdTeFRVZEo2MGNicE12VWpUdlo1YWE4SXZINGJsSm93Z3oyU1ZlUGVjTWNHaHZ3RXlDV3phRnBtdTlUSndGanB1em5Dak54LWs5ZldqNFJaMXR0bU82eXFJWWdHX09TQkJEbTNpNXhQbngtdUVWRnlqSnk4MndGNHBEVHBEZlBFcHU2NC1BSEpMcC1IajdyeUl6RW5qZ29ZZWJJQktfQ3dnT1Z1SXNxVUlCZ0c2?oc=5", "date": "Thu, 02 Jul 2026 09:56:00 GMT", "summary": "Thế giới Di động (MWG) chào bán cổ phiếu ESOP giá 10.000 đồng, dàn lãnh đạo chi hàng tỷ đồng gom mua&nbsp;&nbsp;Báo Pháp Luật Việt Nam", "source": "google-news"}, {"title": "Thế giới Di động phát hành 7,3 triệu cổ phiếu ESOP, nhiều lãnh đạo đăng ký mua - Mekong ASEAN", "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPU0JfVFhjdmF1WDNSZmNjSk1YcUYwREZVaFBuTWozdUx0WU9XS1ZlZUFNZ2VTdVl3Nlprb2xrenNWbXVlY3hxY0laMmtYNXVFVm9NSVBtS0Uya3A5UVJEaF9sYjllQy1rWUppRW53TXViZnVUMU5CVG80Q3RFdGJRVEROZm5EYUtYNzFGX2Y4NERGbHMtMGl5Q0RWZU44OVlfejVBQXZ3bXdaMzhXWHhr?oc=5", "date": "Wed, 01 Jul 2026 04:14:26 GMT", "summary": "Thế giới Di động phát hành 7,3 triệu cổ phiếu ESOP, nhiều lãnh đạo đăng ký mua&nbsp;&nbsp;Mekong ASEAN", "source": "google-news"}, {"title": "Tổng Giám đốc MWG đăng ký mua hơn 275.000 cổ phiếu ESOP, nâng sở hữu lên 0,109% vốn - Cộng đồng Kinh doanh Việt Nam", "url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxNUFdIVjdKb2hfT2U4T2N1Q3ZmOVNONjRMZk5RUE1FUExYRnFNLWJHbTNkR2oyVi0xMWR4SVA0OVBXdzBNQ3FyY2tCZ1M1X1Y2SjM3Yl9pSVJvMDZ6TWh1bzZTU0ctNXdMb2VlR293bHhfQVMtR3RYamVaMFV4X0RtWmgyLTJmMTA4RFp1VkxsY2lJSGp4N0JpcFBtV1llcWcyS0dUREFYbU1Kc0dmdU4yb2JtS1duV0dhUm5waHd5M0RFZTA?oc=5", "date": "Wed, 01 Jul 2026 05:46:54 GMT", "summary": "Tổng Giám đốc MWG đăng ký mua hơn 275.000 cổ phiếu ESOP, nâng sở hữu lên 0,109% vốn&nbsp;&nbsp;Cộng đồng Kinh doanh Việt Nam", "source": "google-news"}, {"title": "Tự doanh 'shopping' cổ phiếu bán lẻ: Không phải ngẫu nhiên liên tiếp gom MWG, MCH - nguoiquansat.vn", "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNQ3B0QUpYc1lfWW0xN0g0d0N1X3JlR2pqaGExbXFWN2FwSUV2cHRkSzI2OUd1c21DSVZaWUtwS3VWa1N6T2l4amJHMFlSWDB2R1BQU3QyWXdtR21GbTRPN0dXa2pMb21BdlNnalJzcU9ZUmdjT1U5S3Z1MVQ5VWxKRmFkamFXdWprTXVIaEhJbEp6MEttZ2RCZFRGOXlmM19oZmRRSHJvWkFoM2JTakFZNkp5VQ?oc=5", "date": "Wed, 01 Jul 2026 17:05:01 GMT", "summary": "Tự doanh 'shopping' cổ phiếu bán lẻ: Không phải ngẫu nhiên liên tiếp gom MWG, MCH&nbsp;&nbsp;nguoiquansat.vn", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU MWG - CTCP DT THE GIOI DI DONG**\n\n**Giá hiện tại**: 78,900.0\n**Tín hiệu**: NẮM GIỮ\n**RSI(14)**: 53.31 - Trung tính\n**MA20**: 78115.0 | **MA50**: 0\n**Giá/MA20**: Trên MA20\n\n**Chi tiết tín hiệu:**\n  • MACD histogram âm (bearish)\n  • Giá trên MA20 (+1.0%)\n  • Khối ngoại bán ròng hôm nay (56.58 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:14.491796"}, "VNM": {"symbol": "VNM", "company_name": "CTCP SUA VIET NAM", "exchange": "HOSE", "industry": "S", "technical": {"action": "TÍCH LŨY", "score": 2, "confidence": "trung bình", "signals": ["RSI quá bán (bullish)", "Stochastic quá bán (3.92)", "Williams %R quá bán", "MACD histogram âm (bearish)", "Giá dưới MA20 (-5.0%)", "Khối ngoại bán ròng hôm nay (45.31 tỷ)"], "indicators": {"ma_5": 55300.0, "ma_5_slope": -3.79, "ma_10": 56640.0, "ma_10_slope": -2.73, "ma_20": 57790.0, "ma_20_slope": NaN, "price_vs_ma20_pct": -5.0, "price_vs_ma50_pct": 0, "current_price": 54900.0, "ema_20": 57184.82, "rsi_14": 24.2, "rsi_signal": "oversold", "rsi_trend": "giảm", "rsi_divergence": "bullish divergence", "rsi_7": 21.12, "rsi_21": 26.02, "stoch_k": 3.92, "stoch_d": 9.8, "stoch_signal": "oversold", "williams_r": -96.08, "williams_r_signal": "oversold", "bb_upper": 61787.58, "bb_middle": 57790.0, "bb_lower": 53792.42, "bb_width": 13.83, "bb_bandwidth_pct": 13.83, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.1385, "volume_current": 4133600, "volume_avg_20": 2876550, "volume_avg_50": 2876550, "volume_ratio": 1.44, "volume_signal": "bình thường", "obv": -20224500.0, "obv_trend": "giảm", "vpt": 2468.88, "vwap": 57471.2, "ad_line": -30.61, "foreign_net": -386.87, "foreign_buy_total": 1069.15, "foreign_sell_total": 1456.02, "foreign_net_today": -45.31, "total_value": 3414.92, "price_change_1d": -600.0, "price_change_pct_1d": -1.08, "price_change_5d": -1200.0, "price_change_pct_5d": -2.14, "price_change_20d": -3100.0, "price_change_pct_20d": -5.34, "volatility_20d": 17.42, "var_95": -2.37, "max_drawdown": -8.21, "sharpe_ratio": -4.67, "beta": -0.01, "skewness": -1.37, "kurtosis": 2.62, "pivot_pp": 55100.0, "pivot_r1": 55500.0, "pivot_r2": 56100.0, "pivot_s1": 54500.0, "pivot_s2": 54100.0, "pattern_engulfing": "bearish engulfing"}}, "news": [{"title": "Cổ phiếu Vinamilk bất ngờ bị bán mạnh, rơi về đáy 7 tháng - Tuổi Trẻ", "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNWWVtT2RWWVhhQlpkNkliQXYyX25iQWg4OGZoeUtmLV9hSVExakU1MEl4MHE1NURlTmxVQnZjVWdXbUdtU2VJZkhMV0FWamNUdFdBSGFiU3Q1V0VTeDBNSWQ3UW9aM0NwNWVpOVVnSGx6X3J6VVc0cjFwektlOE1lc2t3TDFrVVR6OFU1MEc3Wnl6Zmk0WVl0YjNzY19ETWc?oc=5", "date": "Tue, 30 Jun 2026 08:37:00 GMT", "summary": "Cổ phiếu Vinamilk bất ngờ bị bán mạnh, rơi về đáy 7 tháng&nbsp;&nbsp;Tuổi Trẻ", "source": "google-news"}, {"title": "Điều gì đang khiến dòng tiền \"quay lưng\" với VNM? - 24HMoney", "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNTnBGV1YxZmZCc092WWRvaGZEaDNqQWNpelFtTW5Yd2dtRzY1WldERHByZEFYUEtOc0lDMFRkaFhuZTMxRkI4WFpsRXZxYUJkb3k2ZTltMUtJVjMxX2dQWW9hdXRGMkFhekswbHZmV2o3cUZXSDIwS05Dbng1TS02b0NEN2JvMVE0WHBETlRUeEY?oc=5", "date": "Tue, 30 Jun 2026 09:16:45 GMT", "summary": "Điều gì đang khiến dòng tiền \"quay lưng\" với VNM?&nbsp;&nbsp;24HMoney", "source": "google-news"}, {"title": "VNM: Ngày GDKHQ trả cổ tức còn lại năm 2025 bằng tiền (18,5%) - Tin nhanh chứng khoán", "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxORDZrVzhQSVZkNGRWb2JpWmJUdHVLaDZTazBIRHR3cEFoaEk5R3VSYVNyWkJCQzBDZ0hSRDk0c05oMmdmdGpHTnhvNUpYUjFHWmIwcUtFVThVU3JWWUcwTkdUc3g2RlBFNTNxanBlTFB0ZEwyaDZNNW44R3FWNWY2V1hHcEdMUE43cmRVcG5DT1oyQkMwVkVmbXhBUzkxemlscjFSOThKZVZIZ9IBpgFBVV95cUxOa1FqbWRmQ0k5RnZZWjNkTmhydzJ6bHBCQTdjVnZPbFZZNE02RHREcWg1RzVMMFVfZDROeVlPRmRuZjlaLUdzVnZvcnJ0OFZBbVZlWE5oUk1TY3NzVnRreUF3VG1iY3BueGhpeG0ybkdGNWV6d3pkTFdpTXBsTlJ5SkZwdlNaTnlFdGJ4MUoxMHprMXlVa3I0dFJ1TnpGam4yUG5Td2N3?oc=5", "date": "Sun, 21 Jun 2026 07:00:00 GMT", "summary": "VNM: Ngày GDKHQ trả cổ tức còn lại năm 2025 bằng tiền (18,5%)&nbsp;&nbsp;Tin nhanh chứng khoán", "source": "google-news"}, {"title": "Một số cổ phiếu cần quan tâm ngày 24/6: Cơ hội đầu tư tiềm năng với VCB và VNM - VOV.VN", "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOalBjR2Zxam1zUFBMSjFEWnozVmhOWmlHSVQ3MGlEVU8yeVdIaVVTNVA4LTFQUXpaT3VuWldWUVlBczk3Nm15d3J2WDZtZERvN2E2c19zeXd2VUZhOFFNb3AxZXBnZDl1NXZjVVJXS1YzSVVxR0FmQXBQZ2hKVWxfZWhPeEp1Q2hjMHlCSkhiOU9RYU9YLUMxcXVITWptRUVlWUUyQ2kxdHh3blBCWWRPSWxRR25saVJ1UHc?oc=5", "date": "Tue, 23 Jun 2026 22:00:00 GMT", "summary": "Một số cổ phiếu cần quan tâm ngày 24/6: Cơ hội đầu tư tiềm năng với VCB và VNM&nbsp;&nbsp;VOV.VN", "source": "google-news"}, {"title": "Vinamilk sắp chốt danh sách cổ đông trả cổ tức tiền mặt - Mekong ASEAN", "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxPQjFmSW9yQ0RNNnZQdGFZQkZTWUFJTDNfR3ZWdUl2TXhvMWZMQnVjSklDamU5dUhkYWI2OU9ZZFRnQUpMbDlSeFNOcThaU2lsc0ppMDJuTHhIb3Q3UnBURUROSl9UTzZCaHFFY0NvcDhpXzJ2N29QRV9jbzhMZjk3NUZMSER4d0p5aV9sVmNCbUpBNUE?oc=5", "date": "Wed, 17 Jun 2026 07:00:00 GMT", "summary": "Vinamilk sắp chốt danh sách cổ đông trả cổ tức tiền mặt&nbsp;&nbsp;Mekong ASEAN", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU VNM - CTCP SUA VIET NAM**\n\n**Giá hiện tại**: 54,900.0\n**Tín hiệu**: TÍCH LŨY\n**RSI(14)**: 24.2 - Quá bán\n**MA20**: 57790.0 | **MA50**: 0\n**Giá/MA20**: Dưới MA20\n\n**Chi tiết tín hiệu:**\n  • RSI quá bán (bullish)\n  • Stochastic quá bán (3.92)\n  • Williams %R quá bán\n  • MACD histogram âm (bearish)\n  • Giá dưới MA20 (-5.0%)\n  • Khối ngoại bán ròng hôm nay (45.31 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:18.178537"}, "VIC": {"symbol": "VIC", "company_name": "TAP DOAN VINGROUP-CTCP", "exchange": "HOSE", "industry": "S", "technical": {"action": "NẮM GIỮ", "score": 0, "confidence": "thấp", "signals": ["MACD histogram âm (bearish)", "Giá trên MA20 (+5.09%)", "Khối ngoại bán ròng hôm nay (63.73 tỷ)"], "indicators": {"ma_5": 218980.0, "ma_5_slope": -3.08, "ma_10": 222720.0, "ma_10_slope": 3.76, "ma_20": 209620.0, "ma_20_slope": NaN, "price_vs_ma20_pct": 5.09, "price_vs_ma50_pct": 0, "current_price": 220300.0, "ema_20": 214225.88, "rsi_14": 58.89, "rsi_signal": "neutral", "rsi_trend": "tăng", "rsi_divergence": "none", "rsi_7": 57.25, "rsi_21": 58.82, "stoch_k": 60.76, "stoch_d": 59.81, "stoch_signal": "neutral", "williams_r": -39.24, "williams_r_signal": "neutral", "bb_upper": 244402.77, "bb_middle": 209620.0, "bb_lower": 174837.23, "bb_width": 33.19, "bb_bandwidth_pct": 33.19, "bb_position": "trong dải Bollinger", "bb_signal": "neutral", "bb_pct_b": 0.6535, "volume_current": 2086300, "volume_avg_20": 3261360, "volume_avg_50": 3261360, "volume_ratio": 0.64, "volume_signal": "bình thường", "obv": 18173900.0, "obv_trend": "tăng", "vpt": 10579.57, "vwap": 209501.41, "ad_line": 15.5, "foreign_net": 5889.32, "foreign_buy_total": 15846.09, "foreign_sell_total": 9956.77, "foreign_net_today": -63.73, "total_value": 14415.51, "price_change_1d": 0.0, "price_change_pct_1d": 0.0, "price_change_5d": 3100.0, "price_change_pct_5d": 1.43, "price_change_20d": 25300.0, "price_change_pct_20d": 12.97, "volatility_20d": 49.99, "var_95": -4.79, "max_drawdown": -5.81, "sharpe_ratio": 1.71, "beta": 0.01, "skewness": 0.44, "kurtosis": 1.04, "pivot_pp": 220833.33, "pivot_r1": 222366.67, "pivot_r2": 224433.33, "pivot_s1": 218766.67, "pivot_s2": 217233.33}}, "news": [{"title": "Giá trị Vingroup và Vinhomes tăng nửa triệu tỷ chỉ sau nửa năm - Znews", "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOR2NqWGF5c3hNaFFFNDMxQnJWRUYxQ1J1YnNjTm5ZWDZvZ1ZiTUZmSllCM2hncWN6eEhqY0NLelM0S3pfeW82Ull0bGdwdE1BY05lWWI0S04tVElTaTlEeU4yZVZaQkYtanBSc1ZsUDh4RWk2Q0ZPRWluRUJHaE9ybF9zbTZrTTV2WHlDY1VrdGc2NUhCQ3lvOHE3NWU?oc=5", "date": "Sun, 05 Jul 2026 05:25:29 GMT", "summary": "Giá trị Vingroup và Vinhomes tăng nửa triệu tỷ chỉ sau nửa năm&nbsp;&nbsp;Znews", "source": "google-news"}, {"title": "1,1 triệu tỷ \"cứu vớt\" thị trường chứng khoán Việt: Vingroup gánh còng lưng, FPT và Masan Consumer hụt bước - CafeF", "url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxPWlRmY3BacDJYWWhNYllQNHlqNGJnYUR0VWdWMloyZThuWW9Edzl1bEhEMHlwekM0Z0VYcTBvM1A0WTNiTkJiOXM3anlLcF9LRjhHaVZNNUxLZThCeTdSUXJmQnk3eDRVNE9xQjk4c3B3SnFNVm9HM0RfWjU5Y01qYUtEN3pwb1NRbTNlSkpfcm9Ib3AwZ3YtXzJrQk1LdzNWRVNMWXRHZWMzV202NVNWZHNwNE5mZ2ZWdmpSSDJzT1pXOTdkcXJnYXgtbFdIQU9PMWgtQjhKS1c?oc=5", "date": "Sat, 04 Jul 2026 17:03:00 GMT", "summary": "1,1 triệu tỷ \"cứu vớt\" thị trường chứng khoán Việt: Vingroup gánh còng lưng, FPT và Masan Consumer hụt bước&nbsp;&nbsp;CafeF", "source": "google-news"}, {"title": "Dự báo hai cổ phiếu VIC và VHM giảm tỷ trọng đáng kể trong rổ VN30 - VnEconomy", "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQeE9JZTVUMzUxaFlBYjBTZm9fZnRvN0ZYdFJjd21rRlJVandlZU1pSjlZTXkxYWdTSnJYMWZqdzhtR2J6MFhvQ2NtNjVrcGRtWGZxamV6QnY2RFFLd3BHVm9ZNFhFdXZVcXFzclR5SEtmMzE5d1c5dkt0WkdPRzRrbmRuZDMwTF9iWHpreEQtVmVPU0xHdlE?oc=5", "date": "Fri, 03 Jul 2026 06:50:13 GMT", "summary": "Dự báo hai cổ phiếu VIC và VHM giảm tỷ trọng đáng kể trong rổ VN30&nbsp;&nbsp;VnEconomy", "source": "google-news"}, {"title": "Nhóm cổ phiếu ngân hàng dẫn dắt thị trường nhờ cú hích chính sách - Laodong.vn", "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNSVlaYXNTSHRxNjJoT0lJVHkyMGhlVTNLSktaYUZ1T0w1dm5tWHc5TlR0a2dfeGhfeVRyNUdxLUw1aklCYkpWbDFBelA3WjBJQWtIYklFOUlyaW5MWk9RSTFiVGxwZWxqeWx6emIxaEdKamF0OTRwOW5yWW5BaGhxWFZpVFRJZ1NSX1kybk12UFpXeEpSc20tRWhRMy1Na09pZ1Nrc3VpSDRxSlE?oc=5", "date": "Thu, 02 Jul 2026 07:59:11 GMT", "summary": "Nhóm cổ phiếu ngân hàng dẫn dắt thị trường nhờ cú hích chính sách&nbsp;&nbsp;Laodong.vn", "source": "google-news"}, {"title": "Thanh khoản thấp, VN-Index bị đẩy lùi bất chấp đà tăng của VIC – VHM - Mekong ASEAN", "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQZGExRm1zZ05jTkFqa0kxYVdHV3FlSThybHRvNnF2bVdxdXZCeENsNThZM3F4VVZhTFh0NXkzeFFYSFNFRFRrT0wwMFI1dS1vRkFqZnM4Y3JGdW9lZ2tDYU5OUWVpTGxWN2ZWdkpDY2xFclNUbnFFMG1ua0I4bEx1MW5JX05LLWh3S3pLbnZ5MzBDSjlOa291Ui1YSXJzekMyNDZ6eTFB?oc=5", "date": "Thu, 02 Jul 2026 09:03:24 GMT", "summary": "Thanh khoản thấp, VN-Index bị đẩy lùi bất chấp đà tăng của VIC – VHM&nbsp;&nbsp;Mekong ASEAN", "source": "google-news"}], "analysis": "📊 **PHÂN TÍCH CỔ PHIẾU VIC - TAP DOAN VINGROUP-CTCP**\n\n**Giá hiện tại**: 220,300.0\n**Tín hiệu**: NẮM GIỮ\n**RSI(14)**: 58.89 - Trung tính\n**MA20**: 209620.0 | **MA50**: 0\n**Giá/MA20**: Trên MA20\n\n**Chi tiết tín hiệu:**\n  • MACD histogram âm (bearish)\n  • Giá trên MA20 (+5.09%)\n  • Khối ngoại bán ròng hôm nay (63.73 tỷ)\n\n⚠️ **Lưu ý**: Đây là phân tích kỹ thuật tham khảo, không phải lời khuyên đầu tư. Cần kết hợp với phân tích cơ bản và quản trị rủi ro.", "analyzed_at": "2026-07-05T20:38:20.910804"}}};</script>
-    <script src="js/dashboard.js?v=2"></script>
+    <!-- Stock Detail Modal -->
+    <div id="stockModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="modalStockTitle">Chi tiết cổ phiếu</h3>
+                <span class="close" onclick="closeModal('stockModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="stockDetail"></div>
+        </div>
+    </div>
+
+    <div id="errorToast" class="toast"></div>
+
+    <div id="dataLoadedBadge" style="display:none"></div>
+    <script>
+    window._STOCK_DATA = null;
+    </script>
+    <script src="js/dashboard.js?v=4"></script>
 </body>
 </html>
