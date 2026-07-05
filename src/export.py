@@ -11,7 +11,8 @@ from src.config import config
 
 class DataExporter:
     def __init__(self, output_dir: str = None):
-        self.output_dir = output_dir or str(Path(__file__).parent.parent / "docs" / "data")
+        self.docs_dir = str(Path(__file__).parent.parent / "docs")
+        self.output_dir = output_dir or str(Path(self.docs_dir) / "data")
         os.makedirs(self.output_dir, exist_ok=True)
         self.ssi = SSIClient()
         self.agent = AIStockAgent(use_llm=False)
@@ -75,16 +76,42 @@ class DataExporter:
             "stocks": stock_data,
         }
 
+        json_str = json.dumps(export, ensure_ascii=False, default=str)
+
         # 5. Ghi file JSON (cho debug)
         json_path = os.path.join(self.output_dir, "analysis.json")
         with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(export, f, ensure_ascii=False, indent=2, default=str)
+            f.write(json_str)
 
-        # 6. Ghi file JS (cho Safari/GitHub Pages - tránh lỗi fetch)
+        # 6. Ghi file JS (cho script tag thông thường)
         js_path = os.path.join(self.output_dir, "data.js")
-        js_content = "window._STOCK_DATA = " + json.dumps(export, ensure_ascii=False, default=str) + ";"
         with open(js_path, "w", encoding="utf-8") as f:
-            f.write(js_content)
+            f.write("window._STOCK_DATA = " + json_str + ";")
+
+        # 7. Ghi index.html với data nhúng trực tiếp
+        html_path = os.path.join(self.docs_dir, "index.html")
+        if os.path.exists(html_path):
+            with open(html_path, "r", encoding="utf-8") as f:
+                html = f.read()
+
+            inline_tag = f'<script>window._STOCK_DATA = {json_str};</script>'
+
+            # Trường hợp 1: Đã có inline data từ lần chạy trước → thay thế
+            start = html.find('<script>window._STOCK_DATA =')
+            if start >= 0:
+                end = html.find('</script>', start)
+                old = html[start:end + 9]  # +9 for '</script>'
+                html = html.replace(old, inline_tag)
+            else:
+                # Trường hợp 2: Chưa có inline data → thay thế <script src="data/data.js">
+                html = html.replace(
+                    '<script src="data/data.js"></script>',
+                    inline_tag,
+                )
+
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html)
+            print(f"   {html_path} (data inline)")
 
         print(f"\n✅ Hoàn tất! Dữ liệu đã được lưu tại:")
         print(f"   {json_path}")
