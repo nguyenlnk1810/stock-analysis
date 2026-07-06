@@ -174,3 +174,63 @@ class SSIClient:
             return pd.DataFrame(data.get("data", []))
         except Exception:
             return pd.DataFrame()
+
+    def get_daily_index(
+        self,
+        index_id: str = "VNINDEX",
+        from_date: str = None,
+        to_date: str = None,
+        page_size: int = 100,
+    ) -> pd.DataFrame:
+        if not from_date or not to_date:
+            today = datetime.now()
+            from_date = (today - timedelta(days=29)).strftime("%d/%m/%Y")
+            to_date = today.strftime("%d/%m/%Y")
+        params = {
+            "indexId": index_id,
+            "fromDate": from_date,
+            "toDate": to_date,
+            "pageIndex": 1,
+            "pageSize": page_size,
+            "ascending": "true",
+        }
+        data = self._get("/api/v2/Market/DailyIndex", params)
+        items = data.get("data", [])
+        if not items:
+            return pd.DataFrame()
+        records = []
+        for item in items:
+            records.append({
+                "symbol": item.get("IndexId", ""),
+                "index_name": item.get("IndexName", ""),
+                "date": item.get("TradingDate"),
+                "close": float(item.get("IndexValue", 0)),
+                "change": float(item.get("Change", 0)),
+                "change_pct": float(item.get("RatioChange", 0)),
+                "open": None,
+                "high": None,
+                "low": None,
+                "volume": int(float(item.get("TotalMatchVol", 0))),
+                "value": float(item.get("TotalMatchVal", 0)),
+                "total_vol": int(float(item.get("TotalVol", 0))),
+                "total_val": float(item.get("TotalVal", 0)),
+                "advances": int(float(item.get("Advances", 0))),
+                "declines": int(float(item.get("Declines", 0))),
+                "no_changes": int(float(item.get("NoChanges", 0))),
+                "ceiling": int(float(item.get("Ceiling", 0))),
+                "floor": int(float(item.get("Floor", 0))),
+            })
+        df = pd.DataFrame(records)
+        df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
+        df = df.sort_values("date").reset_index(drop=True)
+        # Remove duplicate dates, keep last value per date
+        df = df.drop_duplicates(subset=["date"], keep="last").reset_index(drop=True)
+        return df
+
+    def get_index_list(self) -> pd.DataFrame:
+        params = {"pageIndex": 1, "pageSize": 100}
+        try:
+            data = self._get("/api/v2/Market/IndexList", params)
+            return pd.DataFrame(data.get("data", []))
+        except Exception:
+            return pd.DataFrame()

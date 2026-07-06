@@ -60,85 +60,101 @@ class DataExporter:
             print(f"LỖI: {e}")
             market_data = {"error": str(e)}
 
-        # 3. Export thông tin index
+        # 3. Export thông tin index (DailyIndex API)
         print("  Đang lấy dữ liệu VNINDEX...", end=" ")
         idx_data = {}
-        for market_param in ["", "HOSE"]:
-            try:
-                df_idx = self.ssi.get_daily_stock_price("VNINDEX", page_size=100, market=market_param)
-                if df_idx.empty:
-                    continue
+        try:
+            df_idx = self.ssi.get_daily_index("VNINDEX", page_size=100)
+            if not df_idx.empty:
+                prices_cols = ["date", "close", "volume", "value", "advances", "declines", "no_changes", "ceiling", "floor"]
                 idx_data = {
-                    "prices": df_idx[["date", "close", "open", "high", "low", "volume"]]
-                    .to_dict(orient="records"),
+                    "prices": df_idx[prices_cols].to_dict(orient="records"),
                 }
-                if "close" in df_idx.columns and len(df_idx) >= 2:
+                if len(df_idx) >= 1:
+                    # Bỏ qua session cuối nếu index=0 (phiên hôm nay chưa đóng cửa)
                     last = df_idx.iloc[-1]
-                    prev = df_idx.iloc[-2]
-                    idx_data["current"] = float(last["close"])
-                    idx_data["open"] = float(last["open"])
-                    idx_data["high"] = float(last["high"])
-                    idx_data["low"] = float(last["low"])
-                    idx_data["volume"] = int(last["volume"])
-                    idx_data["change"] = float(last["close"] - prev["close"])
+                    current_idx = float(last["close"])
+                    if current_idx == 0 and len(df_idx) >= 2:
+                        last = df_idx.iloc[-2]
+                        current_idx = float(last["close"])
+                        prev = df_idx.iloc[-3] if len(df_idx) >= 3 else last
+                    else:
+                        prev = df_idx.iloc[-2] if len(df_idx) >= 2 else last
+                    idx_data["current"] = current_idx
+                    idx_data["volume"] = int(float(last["volume"]))
+                    idx_data["value"] = float(last["value"])
+                    idx_data["change"] = float(current_idx - float(prev["close"]))
                     idx_data["change_pct"] = round(
-                        (last["close"] - prev["close"]) / prev["close"] * 100, 2
+                        (current_idx - float(prev["close"])) / float(prev["close"]) * 100, 2
                     )
+                    idx_data["advances"] = int(float(last["advances"]))
+                    idx_data["declines"] = int(float(last["declines"]))
+                    idx_data["no_changes"] = int(float(last["no_changes"]))
                     idx_data["last_date"] = str(last["date"])
                 print("OK")
-                break
-            except Exception as e:
-                emsg = str(e)
-                if "quota exceeded" in emsg:
-                    time.sleep(3)
-                    continue
-                print(f"LỖI: {emsg}")
-                break
+            else:
+                print("EMPTY")
+        except Exception as e:
+            emsg = str(e)
+            print(f"LỖI: {emsg}")
         if not idx_data:
-            # Tạo dữ liệu VNINDEX từ giá trung bình các cổ phiếu
-            print("TỔNG HỢP TỪ CP")
-            closes = []
-            for sym, s in stock_data.items():
-                if "error" in s:
-                    continue
-                tech = s.get("technical", {})
-                ind = tech.get("indicators", {})
-                price = ind.get("current_price", 0)
-                if price:
-                    closes.append(price)
-            avg_price = sum(closes) / len(closes) if closes else 120000
-            today = datetime.now()
-            synthetic_prices = [
-                {
-                    "date": (today - timedelta(days=29 - i)).strftime("%Y-%m-%d"),
-                    "close": round(avg_price * (0.97 + 0.06 * (i / 20 + (i % 5 - 2) * 0.003)), 2),
-                    "open": round(avg_price * (0.96 + 0.07 * (i / 20 + (i % 3) * 0.002)), 2),
-                    "high": round(avg_price * (0.98 + 0.07 * (i / 20 + (i % 4) * 0.003)), 2),
-                    "low": round(avg_price * (0.95 + 0.06 * (i / 20 + (i % 6) * 0.002)), 2),
-                    "volume": int(5e8 + i * 2e7),
-                }
-                for i in range(30)
-            ]
-            idx_data = {
-                "prices": synthetic_prices,
-            }
-            if len(synthetic_prices) >= 2:
-                last = synthetic_prices[-1]
-                prev = synthetic_prices[-2]
-                idx_data["current"] = last["close"]
-                idx_data["open"] = last["open"]
-                idx_data["high"] = last["high"]
-                idx_data["low"] = last["low"]
-                idx_data["volume"] = last["volume"]
-                idx_data["change"] = last["close"] - prev["close"]
-                idx_data["change_pct"] = round((last["close"] - prev["close"]) / prev["close"] * 100, 2)
-                idx_data["last_date"] = last["date"]
+            print("  Đang thử DailyOhlc...", end=" ")
+            try:
+                df_ohlc = self.ssi._get("/api/v2/Market/DailyOhlc", {
+                    "symbol": "VNINDEX", "fromDate": (datetime.now() - timedelta(days=29)).strftime("%d/%m/%Y"),
+                    "toDate": datetime.now().strftime("%d/%m/%Y"), "pageIndex": 1, "pageSize": 100, "ascending": "true"
+                })
+                items = df_ohlc.get("data", [])
+                if items:
+                    recs = []
+                    for item in items:
+                        recs.append({
+                            "date": item.get("TradingDate"),
+                            "close": float(item.get("Close", 0)),
+                            "open": float(item.get("Open", 0)),
+                            "high": float(item.get("High", 0)),
+                            "low": float(item.get("Low", 0)),
+                            "volume": int(float(item.get("Volume", 0))),
+                            "value": float(item.get("Value", 0)),
+                        })
+                    import pandas as pd
+                    df_ohlc = pd.DataFrame(recs)
+                    df_ohlc["date"] = pd.to_datetime(df_ohlc["date"], format="%d/%m/%Y")
+                    df_ohlc = df_ohlc.sort_values("date").reset_index(drop=True)
+                    idx_data = {
+                        "prices": df_ohlc[["date", "close", "open", "high", "low", "volume"]].to_dict(orient="records"),
+                    }
+                    if len(df_ohlc) >= 2:
+                        last = df_ohlc.iloc[-1]
+                        prev = df_ohlc.iloc[-2]
+                        idx_data["current"] = float(last["close"])
+                        idx_data["open"] = float(last["open"])
+                        idx_data["high"] = float(last["high"])
+                        idx_data["low"] = float(last["low"])
+                        idx_data["volume"] = int(float(last["volume"]))
+                        idx_data["change"] = float(last["close"] - prev["close"])
+                        idx_data["change_pct"] = round((last["close"] - prev["close"]) / prev["close"] * 100, 2)
+                        idx_data["last_date"] = str(last["date"])
+                    print("OK")
+                else:
+                    print("EMPTY")
+            except Exception as e2:
+                print(f"LỖI: {e2}")
+
+        # Cập nhật độ rộng thị trường từ VNINDEX thực tế
+        if idx_data.get("advances"):
+            bd_summary = market_data.get("summary", {})
+            bd_summary["advancing"] = idx_data["advances"]
+            bd_summary["declining"] = idx_data["declines"]
+            bd_summary["unchanged"] = idx_data.get("no_changes", 0)
+            bd_summary["total"] = idx_data["advances"] + idx_data["declines"] + idx_data.get("no_changes", 0)
+            market_data["summary"] = bd_summary
 
         # 4. Tạo dữ liệu trading_sessions từ VNINDEX
         print("  Đang tạo dữ liệu phiên giao dịch...", end=" ")
         trading_sessions = []
         idx_prices = idx_data.get("prices", [])
-        for i in range(len(idx_prices) - 1):
+        for i in range(len(idx_prices)):
             cur = idx_prices[i]
             prev = idx_prices[i - 1] if i > 0 else cur
             chg = cur.get("close", 0) - prev.get("close", 0)
@@ -149,19 +165,24 @@ class DataExporter:
                 "change": round(chg, 2),
                 "change_pct": chg_pct,
                 "volume": cur.get("volume", 0),
-                "value": cur.get("volume", 0) * cur.get("close", 0) * 10,
+                "value": cur.get("value", cur.get("volume", 0) * cur.get("close", 0) * 10),
                 "open": cur.get("open", 0),
                 "high": cur.get("high", 0),
                 "low": cur.get("low", 0),
-                "advancing": None,
-                "declining": None,
-                "unchanged": None,
+                "advancing": cur.get("advances"),
+                "declining": cur.get("declines"),
+                "unchanged": cur.get("no_changes"),
+                "ceiling": cur.get("ceiling"),
+                "floor": cur.get("floor"),
                 "foreign_net": 0,
                 "foreign_buy": 0,
                 "foreign_sell": 0,
                 "proprietary_net": 0,
                 "negotiated_value": 0,
             })
+        # Bỏ session cuối nếu index=0 (phiên hôm nay chưa đóng cửa)
+        if trading_sessions and trading_sessions[-1].get("index", 0) == 0:
+            trading_sessions = trading_sessions[:-1]
         trading_sessions = trading_sessions[-30:]
         print(f"{len(trading_sessions)} phiên")
 
@@ -297,7 +318,7 @@ Thị trường {'dự báo tiếp tục duy trì đà tăng' if idx_change_pct 
             "fear_greed": fear_greed,
             "rsi_average": rsi_avg,
             "volume_ratio": bd_summary.get("high_volume", 0),
-            "total_value": idx_data.get("current", 0) * 1e9 if idx_data.get("current") else 0,
+            "total_value": idx_data.get("value", idx_data.get("current", 0) * 1e9) if idx_data.get("value") else (idx_data.get("current", 0) * 1e9 if idx_data.get("current") else 0),
             "total_volume": idx_data.get("volume", 0),
             "negotiated_value": 0,
             "foreign_net": 0,
