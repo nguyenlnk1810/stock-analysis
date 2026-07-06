@@ -339,12 +339,22 @@ Thị trường {'dự báo tiếp tục duy trì đà tăng' if idx_change_pct 
 
             inline_tag = f'<script>window._STOCK_DATA = {json_str};</script>'
 
-            # Trường hợp 1: Đã có inline data từ lần chạy trước → thay thế
-            start = html.find('<script>window._STOCK_DATA =')
-            if start >= 0:
-                end = html.find('</script>', start)
-                old = html[start:end + 9]  # +9 for '</script>'
-                html = html.replace(old, inline_tag)
+            # Trường hợp 1: Đã có inline data → thay thế
+            tag_start = '<script>'
+            data_var = 'window._STOCK_DATA'
+            si = html.find(data_var)
+            if si >= 0:
+                # Tìm <script> đứng trước data_var
+                si_open = html.rfind(tag_start, 0, si)
+                if si_open >= 0:
+                    end = html.find('</script>', si)
+                    old = html[si_open:end + 9]
+                    html = html.replace(old, inline_tag)
+                else:
+                    html = html.replace(
+                        '<script src="data/data.js"></script>',
+                        inline_tag,
+                    )
             else:
                 # Trường hợp 2: Chưa có inline data → thay thế <script src="data/data.js">
                 html = html.replace(
