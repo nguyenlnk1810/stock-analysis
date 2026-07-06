@@ -46,7 +46,7 @@ class AIStockAgent:
         except Exception as e:
             return f"[Lỗi gọi LLM: {e}]"
 
-    def analyze_symbol(self, symbol: str) -> dict:
+    def analyze_symbol(self, symbol: str, skip_news: bool = False) -> dict:
         symbol = symbol.upper()
         # 1. Lấy dữ liệu giá lịch sử
         df = self.ssi.get_daily_stock_price(symbol, page_size=200)
@@ -62,9 +62,15 @@ class AIStockAgent:
         if not company_info:
             company_info = {"symbol": symbol, "companyName": symbol}
 
-        # 4. Tin tức
-        news = self.news.fetch_all_news(symbol)
-        market_news = self.news.fetch_market_news()
+        # 4. Tin tức (skip khi bulk)
+        news = []
+        market_news = []
+        if not skip_news:
+            try:
+                news = self.news.fetch_all_news(symbol)
+                market_news = self.news.fetch_market_news()
+            except Exception:
+                pass
 
         # 5. AI Analysis
         analysis = self._analyze_with_ai(
