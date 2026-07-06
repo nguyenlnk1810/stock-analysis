@@ -19,67 +19,58 @@ class DataExporter:
         self.ssi = SSIClient()
         self.agent = AIStockAgent(use_llm=False)
 
-    def _get_all_stock_symbols(self, markets: list = None) -> list:
+    def _get_all_stock_symbols(self, markets: list = None) -> dict:
         if markets is None:
-            markets = ["HOSE"]
-        all_symbols = []
+            markets = ["HOSE", "HNX", "UPCOM"]
+        symbol_market = {}
         for market in markets:
             try:
                 df = self.ssi.get_securities_list(market)
                 if not df.empty and "Symbol" in df.columns:
                     syms = df["Symbol"].tolist()
                     stock_syms = [s for s in syms if len(s) == 3 and s.isalpha() and s.isupper()]
-                    all_symbols.extend(stock_syms)
+                    for s in stock_syms:
+                        symbol_market[s] = market
                     print(f"  {market}: {len(stock_syms)} stocks")
             except Exception as e:
                 print(f"  {market}: LỖI {e}")
             time.sleep(1.5)
-        return sorted(set(all_symbols))
+        return symbol_market
 
-    def export_all(self, symbols: list[str] = None):
-        print("=" * 50)
-        print("EXPORT DỮ LIỆU PHÂN TÍCH CHỨNG KHOÁN")
-        print("=" * 50)
-
-        # 1. Lấy danh sách mã cổ phiếu
-        if not symbols:
-            print("\nĐang lấy danh sách cổ phiếu từ các sàn...")
-            symbols = self._get_all_stock_symbols()
-        print(f"Tổng số mã: {len(symbols)}")
-
-        # 2. Fetch VNINDEX trước (dùng cho breadth + sessions)
-        print("\n--- VNINDEX ---")
-        idx_data = self._fetch_vnindex()
-        market_data = self._build_breadth_from_vnindex(idx_data)
-
-        # 3. Export từng mã cổ phiếu
-        print("\n--- CỔ PHIẾU ---")
-        stock_data = {}
-        total = len(symbols)
+    def _screen_by_liquidity(self, symbol_market: dict, min_volume: float = 300000, cache_file: str = None) -> dict:
+        cache_path = os.path.join(self.output_dir, "qualified_symbols.json") if cache_file is None else cache_file
+        if cache_path and os.path.exists(cache_path):
+            try:
+                cached = json.load(open(cache_path, "r"))
+                if isinstance(cached, dict):
+                    print(f"  Dùng danh sách đã lưu ({len(cached)} mã)")
+                    return cached
+            except Exception:
+                pass
+        items = list(symbol_market.items())
+        total = len(items)
+        qualified = {}
+        print(f"\n--- SÀNG LỌC THANH KHOẢN ({total} mã, min {min_volume:,.0f} CP/phiên) ---")
         start_time = time.time()
-        for idx, symbol in enumerate(symbols, 1):
+        for i, (symbol, market) in enumerate(items, 1):
             elapsed = time.time() - start_time
-            eta = (elapsed / idx) * (total - idx) if idx > 0 else 0
-            print(f"  [{idx}/{total}] {symbol}...", end=" ")
-            sys.stdout.flush()
-            retries = 0
-            while retries < 2:
-                try:
-                    result = self.agent.analyze_symbol(symbol, skip_news=True)
-                    result.pop("price_data", None)
-                    stock_data[symbol] = result
-                    print("OK")
-                    break
-                except Exception as e:
-                    emsg = str(e)
-                    if "quota exceeded" in emsg.lower() and retries < 1:
-                        print("RL", end="->")
-                        time.sleep(3)
-                        retries += 1
-                        continue
-                    print(f"LỖI")
-                    stock_data[symbol] = {"symbol": symbol, "error": str(e)[:100]}
-                    break
+            eta = (elapsed / i) * (total - i) if i > 0 else 0
+            try:
+                df = self.ssi.get_daily_stock_price(symbol, page_size=15, market=market)
+                if not df.empty:
+                    avg_vol = df["volume"].tail(10).mean()
+                    if avg_vol >= min_volume:
+                        qualified[symbol] = market
+            except Exception:
+                pass
+            if i % 50 == 0 or i == total:
+                pct = i / total * 100
+                print(f"  [{i}/{total}] {pct:.0f}% | {len(qualified)} qualified | ETA: {eta/60:.0f}ph")
+        print(f"  ✅ Sàng lọc xong: {len(qualified)}/{total} mã ({time.time()-start_time:.0f}s)")
+        if cache_path:
+            json.dump(qualified, open(cache_path, "w"), ensure_ascii=False)
+            print(f"  Đã lưu danh sách: {cache_path}")
+        return qualified
 
     def _fetch_vnindex(self):
         print("  VNINDEX...", end=" ")
@@ -309,26 +300,32 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         print("=" * 50)
         print("EXPORT DỮ LIỆU PHÂN TÍCH CHỨNG KHOÁN")
         print("=" * 50)
+        symbol_market = {}
         if not symbols:
             print("\nĐang lấy danh sách cổ phiếu từ các sàn...")
-            symbols = self._get_all_stock_symbols()
-        print(f"Tổng số mã: {len(symbols)}")
+            symbol_market = self._get_all_stock_symbols()
+            print(f"Tổng số mã: {len(symbol_market)}")
+        else:
+            symbol_market = {s: "HOSE" for s in symbols}
+        qualified_syms = self._screen_by_liquidity(symbol_market)
+        print(f"\nPhân tích {len(qualified_syms)} mã có thanh khoản ≥ 300k CP/phiên")
         print("\n--- VNINDEX ---")
         idx_data = self._fetch_vnindex()
         market_data = self._build_breadth_from_vnindex(idx_data)
         print("\n--- CỔ PHIẾU ---")
         stock_data = {}
-        total = len(symbols)
+        total = len(qualified_syms)
         start_time = time.time()
-        for idx, symbol in enumerate(symbols, 1):
+        for idx, symbol in enumerate(qualified_syms, 1):
+            market = qualified_syms.get(symbol, "HOSE")
             elapsed = time.time() - start_time
             eta = (elapsed / idx) * (total - idx) if idx > 0 else 0
-            print(f"  [{idx}/{total}] {symbol}...", end=" ")
+            print(f"  [{idx}/{total}] {symbol} ({market})...", end=" ")
             sys.stdout.flush()
             retries = 0
             while retries < 2:
                 try:
-                    result = self.agent.analyze_symbol(symbol, skip_news=True)
+                    result = self.agent.analyze_symbol(symbol, skip_news=True, market=market)
                     result.pop("price_data", None)
                     stock_data[symbol] = result
                     print("OK")

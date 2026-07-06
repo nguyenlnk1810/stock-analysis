@@ -46,10 +46,10 @@ class AIStockAgent:
         except Exception as e:
             return f"[Lỗi gọi LLM: {e}]"
 
-    def analyze_symbol(self, symbol: str, skip_news: bool = False) -> dict:
+    def analyze_symbol(self, symbol: str, skip_news: bool = False, market: str = "HOSE") -> dict:
         symbol = symbol.upper()
         # 1. Lấy dữ liệu giá lịch sử
-        df = self.ssi.get_daily_stock_price(symbol, page_size=200)
+        df = self.ssi.get_daily_stock_price(symbol, page_size=200, market=market)
 
         # 2. Phân tích kỹ thuật
         tech_signal = {}
