@@ -7,6 +7,7 @@ from pathlib import Path
 
 from src.ssi_client import SSIClient
 from src.ai_agent import AIStockAgent
+from src.market_sentiment import GreedFearIndex
 from src.config import config
 
 
@@ -209,7 +210,10 @@ class DataExporter:
         chg_pct = idx_data.get("change_pct", 0)
         adv = bd.get("advancing", 0)
         dec = bd.get("declining", 0)
-        br = bd.get("breadth_ratio", 0.5)
+
+        gf = GreedFearIndex()
+        sentiment = gf.analyze(idx_data.get("prices", []))
+        fear_greed = int(sentiment["index"])
 
         score = 5
         reasons = []
@@ -222,7 +226,6 @@ class DataExporter:
         elif dec > adv:
             score -= 1
             reasons.append("Độ rộng tiêu cực")
-        fear_greed = max(1, min(99, int((adv / max(adv + dec, 1)) * 100)))
         score = max(1, min(10, score))
         if score >= 8: action = "MUA MẠNH"
         elif score >= 6: action = "MUA"
@@ -235,16 +238,23 @@ class DataExporter:
         top_sec = sectors[:3]
         sec_text = ", ".join([f"{s['name']} ({s['change']:+.2f}%)" for s in top_sec]) if top_sec else "chưa xác định"
 
+        sentiment_label = sentiment.get("label", "TRUNG TÍNH")
+        comp = sentiment.get("components", {})
+        md = sentiment.get("market_data", {})
+
         ai_report = f"""**BÁO CÁO THỊ TRƯỜNG NGÀY {datetime.now().strftime('%d/%m/%Y')}**
+
+**Chỉ số Tâm lý Thị trường: {sentiment_label} ({fear_greed}/100)**
+- RSI Market: {md.get('rsi_value', 'N/A')} điểm
+- Biến động: {md.get('volatility_pct', 'N/A')}% (năm)
+- Động lượng 20D: {md.get('momentum_pct', 'N/A')}%
+- Breadth 5D: {md.get('breadth_ratio', 'N/A')}
 
 **Tóm tắt phiên giao dịch:**
 VN-Index đóng cửa ở mức {cur:,.0f} điểm, {'tăng' if chg_pct >= 0 else 'giảm'} {abs(chg_pct):.2f}% so với phiên trước. Thị trường có {adv} mã tăng và {dec} mã giảm.
 
 **Phân tích dòng tiền:**
 Nhóm ngành thu hút dòng tiền: {sec_text}.
-
-**Đánh giá kỹ thuật:**
-Thị trường đang trong xu hướng {'tích cực' if score >= 5 else 'thận trọng'} với điểm số {score}/10.
 
 **Chiến lược đầu tư:**
 - {'Tỷ trọng tiền mặt: 20-30%' if score >= 5 else 'Tỷ trọng tiền mặt: 50-70%'}
@@ -253,7 +263,12 @@ Thị trường đang trong xu hướng {'tích cực' if score >= 5 else 'thậ
         return {
             "recommendation": {"action": action, "score": score, "reason": ". ".join(reasons) if reasons else "Thị trường chưa có tín hiệu rõ ràng"},
             "fear_greed": fear_greed,
-            "rsi_average": 50, "volume_ratio": 0,
+            "fear_greed_label": sentiment_label,
+            "fear_greed_level": sentiment.get("level", "neutral"),
+            "sentiment_components": comp,
+            "sentiment_market_data": md,
+            "rsi_average": md.get("rsi_value", 50),
+            "volume_ratio": 0,
             "total_value": idx_data.get("value", cur * 1e9) if idx_data.get("value") else (cur * 1e9 if cur else 0),
             "total_volume": idx_data.get("volume", 0),
             "negotiated_value": 0, "foreign_net": 0, "proprietary_net": 0,
@@ -344,6 +359,13 @@ Thị trường đang trong xu hướng {'tích cực' if score >= 5 else 'thậ
             "exported_at": datetime.now().isoformat(),
             "market_index": idx_data, "market_breadth": market_data,
             "market_overview": market_overview,
+            "market_sentiment": {
+                "index": market_overview.get("fear_greed", 50),
+                "label": market_overview.get("fear_greed_label", "TRUNG TÍNH"),
+                "level": market_overview.get("fear_greed_level", "neutral"),
+                "components": market_overview.get("sentiment_components", {}),
+                "market_data": market_overview.get("sentiment_market_data", {}),
+            },
             "trading_sessions": trading_sessions, "sectors": sectors,
             "foreign": {"sessions": trading_sessions, "top_buy": [], "top_sell": []},
             "proprietary": {"sessions": trading_sessions, "top_buy": [], "top_sell": []},

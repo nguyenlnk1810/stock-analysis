@@ -164,11 +164,16 @@ function renderAIHero() {
 
     const rsiAv = breadth.rsi_average != null ? breadth.rsi_average : overview.rsi_average;
     const fg = overview.fear_greed != null ? overview.fear_greed : 50;
+    const fgLabel = overview.fear_greed_label || '';
     const br = breadth.breadth_ratio != null ? (breadth.breadth_ratio * 100).toFixed(0) + '%' : '--';
     const vol = overview.volume_ratio != null ? overview.volume_ratio.toFixed(1) + 'x' : '--';
 
     document.getElementById('heroRsi').textContent = rsiAv != null ? rsiAv.toFixed(1) : '--';
-    document.getElementById('heroFearGreed').textContent = fg;
+    const fgEl = document.getElementById('heroFearGreed');
+    fgEl.textContent = fg;
+    fgEl.title = fgLabel;
+    const fgLabelEl = document.getElementById('heroFearGreedLabel');
+    if (fgLabelEl) fgLabelEl.textContent = fgLabel;
     document.getElementById('heroBreadth').textContent = br;
     document.getElementById('heroVolume').textContent = vol;
     document.getElementById('aiHeroDate').textContent = DATA.exported_at ? new Date(DATA.exported_at).toLocaleDateString('vi-VN') : 'Hôm nay';
@@ -598,18 +603,40 @@ function renderBreadthDetailed() {
 function renderSentiment() {
     const ov = DATA.market_overview || {};
     const fg = ov.fear_greed != null ? ov.fear_greed : 50;
+    const fgLabel = ov.fear_greed_label || '';
+    const comps = ov.sentiment_components || {};
     const container = document.getElementById('sentimentSection');
     const angle = (fg / 100) * 180 - 90;
     const labels = ['Cực kỳ sợ hãi', 'Sợ hãi', 'Trung lập', 'Tham lam', 'Cực kỳ tham lam'];
     const labelIdx = fg < 20 ? 0 : fg < 40 ? 1 : fg < 60 ? 2 : fg < 80 ? 3 : 4;
+
+    const compNames = {rsi: 'RSI', volatility: 'Biến động', momentum: 'Động lượng', breadth: 'Bề rộng'};
+    const compHtml = Object.keys(compNames).filter(k => comps[k] != null).map(k => {
+        const v = comps[k];
+        const pct = Math.round(v);
+        const c = pct >= 60 ? '#22c55e' : pct <= 40 ? '#ef4444' : '#f59e0b';
+        return `<div class="sentiment-comp">
+            <div class="comp-label">${compNames[k]}</div>
+            <div class="comp-bar"><div class="comp-fill" style="width:${pct}%;background:${c}"></div></div>
+            <div class="comp-value" style="color:${c}">${v}</div>
+        </div>`;
+    }).join('');
+
     container.innerHTML = `
-        <div class="sentiment-gauge">
-            <div class="gauge-needle" style="transform:rotate(${angle}deg)"></div>
-            <div class="gauge-mask"></div>
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+            <div style="text-align:center">
+                <div class="sentiment-gauge">
+                    <div class="gauge-needle" style="transform:rotate(${angle}deg)"></div>
+                    <div class="gauge-mask"></div>
+                </div>
+                <div class="sentiment-value" style="color:${fg >= 60 ? '#22c55e' : fg <= 40 ? '#ef4444' : '#f59e0b'}">${fg}</div>
+                <div class="sentiment-label" style="font-size:13px">${fgLabel}</div>
+            </div>
+            <div style="flex:1;min-width:200px">
+                <div class="sentiment-sub" style="margin-bottom:8px">Chi tiết thành phần</div>
+                ${compHtml}
+            </div>
         </div>
-        <div class="sentiment-value" style="color:${fg >= 60 ? '#22c55e' : fg <= 40 ? '#ef4444' : '#f59e0b'}">${fg}</div>
-        <div class="sentiment-label">${labels[labelIdx]}</div>
-        <div class="sentiment-sub">Chỉ số Fear & Greed</div>
     `;
 }
 

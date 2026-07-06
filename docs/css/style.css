@@ -538,6 +538,11 @@ body {
 .sentiment-label { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
 .sentiment-sub { font-size: 0.9rem; color: var(--text-muted); }
 .sentiment-value { font-size: 2rem; font-weight: 800; }
+.sentiment-comp { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.sentiment-comp .comp-label { font-size:11px; color:var(--text-muted); min-width:65px; }
+.sentiment-comp .comp-bar { flex:1; height:6px; background:var(--bg-card-hover); border-radius:3px; overflow:hidden; }
+.sentiment-comp .comp-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+.sentiment-comp .comp-value { font-size:11px; font-weight:600; min-width:28px; text-align:right; }
 
 .ai-report { line-height: 1.8; }
 .ai-report h3 { color: var(--accent-blue); margin: 20px 0 10px; font-size: 1.1rem; }
