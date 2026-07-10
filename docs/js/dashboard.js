@@ -57,14 +57,10 @@ function switchTab(tabId) {
     document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
     const titles = {
         'dashboard': 'Dashboard',
-        'market-overview': 'Tổng quan thị trường',
         'trading-stats': 'Thống kê giao dịch',
         'market-report': 'Nhận định thị trường',
         'cashflow': 'Dòng tiền',
-        'market-breadth': 'Độ rộng thị trường',
         'sectors': 'Phân tích ngành',
-        'foreign': 'Khối ngoại',
-        'proprietary': 'Tự doanh',
         'signals': 'Top tín hiệu',
         'watchlist': 'Watchlist',
     };
@@ -83,9 +79,6 @@ function renderAll() {
     renderTopList();
     renderSectorMini();
     renderNews();
-    renderFullChart();
-    renderIndexTable();
-    renderQuickStats();
     renderTradingTable();
     renderReportTable();
     renderBreadthDetailed();
@@ -93,12 +86,6 @@ function renderAll() {
     renderAIReport();
     renderSectorFull();
     renderHeatmap();
-    renderBreadthByExchange();
-    renderBreadthFullChart();
-    renderForeignChart();
-    renderForeignTables();
-    renderProprietaryChart();
-    renderProprietaryTables();
     renderSignalsTable();
     renderWatchlist();
     updateAIRecommendationBadge();
@@ -409,111 +396,6 @@ function renderNews() {
     `).join('');
 }
 
-/* ===== FULL CHART ===== */
-function renderFullChart() {
-    const prices = DATA.market_index?.prices || [];
-    if (prices.length < 2) return;
-    const ctx = document.getElementById('vnindexFullChart').getContext('2d');
-    if (charts.vnindexFull) charts.vnindexFull.destroy();
-    const dates = prices.map(p => p.date ? new Date(p.date).toLocaleDateString('vi-VN') : '');
-    const closes = prices.map(p => p.close);
-    const volumes = prices.map(p => p.volume / 1e6 || 0);
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(59,130,246,0.15)');
-    gradient.addColorStop(1, 'rgba(59,130,246,0)');
-    charts.vnindexFull = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dates,
-            datasets: [
-                {
-                    label: 'VN-Index',
-                    data: closes,
-                    borderColor: '#3b82f6',
-                    borderWidth: 2,
-                    fill: true,
-                    backgroundColor: gradient,
-                    pointRadius: 0,
-                    tension: 0.3,
-                    yAxisID: 'y',
-                },
-                {
-                    label: 'KLGD (triệu)',
-                    data: volumes,
-                    backgroundColor: 'rgba(6,182,212,0.3)',
-                    borderColor: 'rgba(6,182,212,0.5)',
-                    borderWidth: 0,
-                    type: 'bar',
-                    yAxisID: 'y1',
-                    borderRadius: 2,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    labels: { color: '#8899bb', font: { size: 12 } }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#556688', maxTicksLimit: 10 },
-                    grid: { color: 'rgba(255,255,255,0.03)' }
-                },
-                y: {
-                    position: 'right',
-                    ticks: { color: '#556688' },
-                    grid: { color: 'rgba(255,255,255,0.03)' }
-                },
-                y1: {
-                    position: 'left',
-                    ticks: { color: '#556688' },
-                    grid: { display: false },
-                }
-            }
-        }
-    });
-}
-
-/* ===== INDEX TABLE ===== */
-function renderIndexTable() {
-    const idx = DATA.market_index || {};
-    const container = document.getElementById('indexTable');
-    const indices = [
-        { name: 'VN-Index', value: idx.current, change: idx.change_pct },
-        { name: 'HNX-Index', value: idx.hnx, change: idx.hnx_change },
-        { name: 'UPCOM-Index', value: idx.upcom, change: idx.upcom_change },
-    ];
-    container.innerHTML = indices.filter(i => i.value != null).map(i => `
-        <div class="index-row">
-            <span class="name">${i.name}</span>
-            <span class="value" style="color:${i.change >= 0 ? '#22c55e' : '#ef4444'}">${formatNumber(i.value)} (${formatPercent(i.change)})</span>
-        </div>
-    `).join('') || '<div class="signal-placeholder">Chưa có dữ liệu</div>';
-}
-
-/* ===== QUICK STATS ===== */
-function renderQuickStats() {
-    const ov = DATA.market_overview || {};
-    const container = document.getElementById('quickStats');
-    const stats = [
-        { label: 'Tổng GD (tỷ)', value: ov.total_value ? formatNumber(ov.total_value / 1e9) + ' tỷ' : '--' },
-        { label: 'KLGD (triệu)', value: ov.total_volume ? formatNumber(ov.total_volume / 1e6) + 'M' : '--' },
-        { label: 'GD Thỏa thuận', value: ov.negotiated_value ? formatNumber(ov.negotiated_value / 1e9) + ' tỷ' : '--' },
-        { label: 'NN ròng', value: ov.foreign_net != null ? formatNumber(ov.foreign_net / 1e9) + ' tỷ' : '--', color: ov.foreign_net >= 0 ? '#22c55e' : '#ef4444' },
-        { label: 'TD ròng', value: ov.proprietary_net != null ? formatNumber(ov.proprietary_net / 1e9) + ' tỷ' : '--', color: ov.proprietary_net >= 0 ? '#22c55e' : '#ef4444' },
-    ];
-    container.innerHTML = stats.map(s => `
-        <div class="quick-stat-item">
-            <span class="quick-stat-label">${s.label}</span>
-            <span class="quick-stat-value" ${s.color ? `style="color:${s.color}"` : ''}>${s.value}</span>
-        </div>
-    `).join('');
-}
-
 /* ===== TRADING TABLE ===== */
 function renderTradingTable() {
     const sessions = DATA.trading_sessions || [];
@@ -766,188 +648,6 @@ function renderHeatmap() {
             </div>
         `;
     }).join('');
-}
-
-/* ===== BREADTH BY EXCHANGE ===== */
-function renderBreadthByExchange() {
-    ['all', 'hose', 'hnx', 'upcom'].forEach(ex => {
-        const data = DATA.market_breadth?.[ex] || DATA.market_breadth?.summary || {};
-        const container = document.getElementById('breadth' + ex.charAt(0).toUpperCase() + ex.slice(1));
-        if (!container) return;
-        const stats = [
-            { label: 'Tổng số CP', value: data.total },
-            { label: 'Trên MA20', value: data.above_ma20 },
-            { label: 'Trên MA50', value: data.above_ma50 },
-            { label: 'Trên MA200', value: data.above_ma200 },
-            { label: 'RSI > 50', value: data.rsi_above_50 },
-            { label: 'RSI > 70', value: data.rsi_overbought },
-            { label: 'MACD Bullish', value: data.macd_bullish },
-            { label: 'MACD Bearish', value: data.macd_bearish },
-            { label: 'KL > MA20', value: data.above_volume_ma20 },
-            { label: 'Đỉnh mới', value: data.high_52w },
-            { label: 'Đáy mới', value: data.low_52w },
-            { label: 'Distribution Day', value: data.distribution_days },
-            { label: 'Follow Through Day', value: data.follow_through_days },
-        ];
-        container.innerHTML = stats.filter(s => s.value != null).map(s => `
-            <div class="breadth-stat">
-                <span>${s.label}</span>
-                <span class="value ${s.label.includes('Đáy') || s.label.includes('Bearish') || s.label.includes('Distribution') ? 'bad' : 'good'}">${s.value}</span>
-            </div>
-        `).join('') || '<div class="signal-placeholder">Chưa có dữ liệu</div>';
-    });
-}
-
-/* ===== BREADTH FULL CHART ===== */
-function renderBreadthFullChart() {
-    const ctx = document.getElementById('breadthChartFull').getContext('2d');
-    if (charts.breadthFull) charts.breadthFull.destroy();
-    const bd = DATA.market_breadth?.summary || {};
-    charts.breadthFull = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Trên MA20', 'Trên MA50', 'Trên MA200', 'RSI > 50', 'RSI > 70', 'KL > MA20', 'Đỉnh mới', 'Đáy mới'],
-            datasets: [{
-                data: [
-                    bd.above_ma20 || 0,
-                    bd.above_ma50 || 0,
-                    bd.above_ma200 || 0,
-                    bd.rsi_above_50 || 0,
-                    bd.rsi_overbought || 0,
-                    bd.above_volume_ma20 || 0,
-                    bd.high_52w || 0,
-                    bd.low_52w || 0,
-                ],
-                backgroundColor: ['#22c55e', '#3b82f6', '#8b5cf6', '#06b6d4', '#ef4444', '#f59e0b', '#22c55e', '#ef4444'],
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-            },
-            scales: {
-                x: { ticks: { color: '#8899bb', font: { size: 10 } }, grid: { display: false } },
-                y: { beginAtZero: true, ticks: { color: '#556688', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.03)' } }
-            }
-        }
-    });
-}
-
-/* ===== FOREIGN CHART ===== */
-function renderForeignChart() {
-    const foreign = DATA.foreign || {};
-    const sessions = foreign.sessions || DATA.trading_sessions || [];
-    if (!sessions.length) return;
-    const ctx = document.getElementById('foreignChart').getContext('2d');
-    if (charts.foreign) charts.foreign.destroy();
-    const last10 = sessions.slice(-20);
-    charts.foreign = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: last10.map(s => s.date || ''),
-            datasets: [
-                {
-                    label: 'Mua ròng (tỷ)',
-                    data: last10.map(s => (s.foreign_buy || 0) / 1e9),
-                    backgroundColor: 'rgba(34,197,94,0.6)',
-                    borderColor: '#22c55e',
-                    borderWidth: 1,
-                    borderRadius: 2,
-                },
-                {
-                    label: 'Bán ròng (tỷ)',
-                    data: last10.map(s => -(s.foreign_sell || 0) / 1e9),
-                    backgroundColor: 'rgba(239,68,68,0.6)',
-                    borderColor: '#ef4444',
-                    borderWidth: 1,
-                    borderRadius: 2,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: '#8899bb' } }
-            },
-            scales: {
-                x: { ticks: { color: '#556688', maxTicksLimit: 10 } },
-                y: { ticks: { color: '#556688' }, grid: { color: 'rgba(255,255,255,0.03)' } }
-            }
-        }
-    });
-}
-
-function renderForeignTables() {
-    const foreign = DATA.foreign || {};
-    const buy = (foreign.top_buy || []).slice(0, 10);
-    const sell = (foreign.top_sell || []).slice(0, 10);
-    const buyBody = document.querySelector('#foreignBuyTable tbody');
-    const sellBody = document.querySelector('#foreignSellTable tbody');
-    if (buy.length) {
-        buyBody.innerHTML = buy.map(s => `<tr><td><strong>${s.symbol}</strong></td><td class="positive">${formatNumber(s.value / 1e9)} tỷ</td><td>${formatNumber(s.volume || 0)}</td></tr>`).join('');
-    } else {
-        buyBody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có dữ liệu</td></tr>';
-    }
-    if (sell.length) {
-        sellBody.innerHTML = sell.map(s => `<tr><td><strong>${s.symbol}</strong></td><td class="negative">${formatNumber(s.value / 1e9)} tỷ</td><td>${formatNumber(s.volume || 0)}</td></tr>`).join('');
-    } else {
-        sellBody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có dữ liệu</td></tr>';
-    }
-}
-
-/* ===== PROPRIETARY ===== */
-function renderProprietaryChart() {
-    const prop = DATA.proprietary || {};
-    const sessions = prop.sessions || DATA.trading_sessions || [];
-    if (!sessions.length) return;
-    const ctx = document.getElementById('proprietaryChart').getContext('2d');
-    if (charts.proprietary) charts.proprietary.destroy();
-    const last10 = sessions.slice(-20);
-    charts.proprietary = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: last10.map(s => s.date || ''),
-            datasets: [{
-                label: 'TD ròng (tỷ)',
-                data: last10.map(s => (s.proprietary_net || 0) / 1e9),
-                backgroundColor: last10.map(s => (s.proprietary_net || 0) >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)'),
-                borderColor: last10.map(s => (s.proprietary_net || 0) >= 0 ? '#22c55e' : '#ef4444'),
-                borderWidth: 1,
-                borderRadius: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#8899bb' } } },
-            scales: {
-                x: { ticks: { color: '#556688', maxTicksLimit: 10 } },
-                y: { ticks: { color: '#556688' }, grid: { color: 'rgba(255,255,255,0.03)' } }
-            }
-        }
-    });
-}
-
-function renderProprietaryTables() {
-    const prop = DATA.proprietary || {};
-    const buy = (prop.top_buy || []).slice(0, 10);
-    const sell = (prop.top_sell || []).slice(0, 10);
-    const buyBody = document.querySelector('#proprietaryBuyTable tbody');
-    const sellBody = document.querySelector('#proprietarySellTable tbody');
-    if (buy.length) {
-        buyBody.innerHTML = buy.map(s => `<tr><td><strong>${s.symbol}</strong></td><td class="positive">${formatNumber(s.value / 1e9)} tỷ</td></tr>`).join('');
-    } else {
-        buyBody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có dữ liệu</td></tr>';
-    }
-    if (sell.length) {
-        sellBody.innerHTML = sell.map(s => `<tr><td><strong>${s.symbol}</strong></td><td class="negative">${formatNumber(s.value / 1e9)} tỷ</td></tr>`).join('');
-    } else {
-        sellBody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có dữ liệu</td></tr>';
-    }
 }
 
 /* ===== SIGNALS TABLE ===== */
