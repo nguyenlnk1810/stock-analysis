@@ -8,6 +8,7 @@ from pathlib import Path
 from src.ssi_client import SSIClient
 from src.ai_agent import AIStockAgent
 from src.market_sentiment import GreedFearIndex
+from src.signal_scoring import SignalScorer, compute_smart_money_patterns, compute_position_score
 from src.config import config
 
 
@@ -37,7 +38,7 @@ class DataExporter:
             time.sleep(1.5)
         return symbol_market
 
-    def _screen_by_liquidity(self, symbol_market: dict, min_volume: float = 300000, cache_file: str = None) -> dict:
+    def _screen_by_liquidity(self, symbol_market: dict, min_volume: float = 500000, cache_file: str = None) -> dict:
         cache_path = os.path.join(self.output_dir, "qualified_symbols.json") if cache_file is None else cache_file
         if cache_path and os.path.exists(cache_path):
             try:
@@ -58,7 +59,7 @@ class DataExporter:
             try:
                 df = self.ssi.get_daily_stock_price(symbol, page_size=15, market=market)
                 if not df.empty:
-                    avg_vol = df["volume"].tail(10).mean()
+                    avg_vol = df["volume"].tail(min(20, len(df))).mean()
                     if avg_vol >= min_volume:
                         qualified[symbol] = market
             except Exception:
@@ -295,6 +296,151 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         print(f"\n✅ Hoàn tất! {json_path}, {js_path}")
         return export
 
+    def _build_rankings(self, stock_data: dict) -> dict:
+        rankings = {
+            "top_20_manh_nhat": [],
+            "top_20_dong_tien": [],
+            "top_10_tin_hieu_mua": [],
+            "top_10_suy_yeu": [],
+            "canh_bao": [],
+        }
+        scored_stocks = []
+        money_flow_stocks = []
+        buy_signals = []
+        weak_stocks = []
+        warnings = []
+
+        for sym, s in stock_data.items():
+            if s.get("error"):
+                continue
+            tech = s.get("technical", {})
+            scoring = tech.get("signal_scoring", {})
+            ind = tech.get("indicators", {})
+            sm = tech.get("smart_money", {})
+
+            tong_diem = scoring.get("tong_diem", 0)
+            xep_loai = scoring.get("xep_loai", "LOAI")
+            price = ind.get("current_price", 0)
+            change = ind.get("price_change_pct_1d", 0)
+            vol_ratio = ind.get("volume_ratio", 0)
+            rvol = float(ind.get("volume_current", 0)) / max(float(ind.get("volume_avg_20", 1)), 1)
+            rsi = ind.get("rsi_14", 0)
+            macd_hist = ind.get("macd_histogram_standard", 0)
+            mfi = ind.get("mfi", 50)
+            obv_trend = ind.get("obv_trend", "")
+            cmf = ind.get("cmf", 0)
+            bos = sm.get("bos", "none")
+            fvg = sm.get("fvg_signal", "none")
+            choch = sm.get("choch", "none")
+            supertrend_sig = sm.get("supertrend_signal", "neutral")
+
+            # Money flow score
+            mf_score = 0
+            if vol_ratio > 1.5: mf_score += 5
+            elif vol_ratio > 1.0: mf_score += 2
+            if mfi and mfi > 60: mf_score += 5
+            elif mfi and mfi > 50: mf_score += 2
+            if obv_trend == "tăng": mf_score += 4
+            if cmf and cmf > 0: mf_score += 4
+
+            item = {
+                "symbol": sym,
+                "score": tong_diem,
+                "grade": xep_loai,
+                "price": price,
+                "change_pct": change,
+                "rsi": rsi,
+                "vol_ratio": round(rvol, 2),
+                "mfi": mfi,
+                "macd_hist": macd_hist,
+                "bos": bos,
+                "fvg": fvg,
+                "choch": choch,
+                "supertrend": supertrend_sig,
+                "money_flow_score": mf_score,
+            }
+
+            scored_stocks.append(item)
+            money_flow_stocks.append(item)
+
+            # Buy signals
+            is_buy = False
+            buy_reasons = []
+            if tong_diem >= 70:
+                is_buy = True
+                buy_reasons.append(f"Tổng điểm {tong_diem} ({xep_loai})")
+            if supertrend_sig == "uptrend" and rvol > 1.2:
+                is_buy = True
+                buy_reasons.append("SuperTrend tăng + Volume")
+            if "bullish" in str(bos) and rvol > 1.3:
+                is_buy = True
+                buy_reasons.append("BOS tăng + Volume")
+            if fvg == "bullish" and rvol > 1.3:
+                is_buy = True
+                buy_reasons.append("FVG tăng + Volume")
+            if macd_hist and macd_hist > 0 and vol_ratio > 1.3 and rsi and rsi > 50:
+                is_buy = True
+                buy_reasons.append("MACD+RSI+Volume")
+            if choch == "CHOCH tang" and rvol > 1.5:
+                is_buy = True
+                buy_reasons.append("CHOCH tăng mạnh")
+            if is_buy:
+                buy_signals.append({**item, "reasons": buy_reasons})
+
+            # Weak stocks
+            is_weak = False
+            weak_reasons = []
+            if tong_diem < 50:
+                is_weak = True
+                weak_reasons.append(f"Điểm thấp ({tong_diem})")
+            if "downtrend" in str(supertrend_sig):
+                is_weak = True
+                weak_reasons.append("SuperTrend giảm")
+            if "giam" in str(bos):
+                is_weak = True
+                weak_reasons.append("BOS giảm")
+            if rsi and rsi < 40:
+                is_weak = True
+                weak_reasons.append(f"RSI < 40 ({rsi:.0f})")
+            if macd_hist and macd_hist < 0:
+                is_weak = True
+                weak_reasons.append("MACD Histogram âm")
+            if is_weak:
+                weak_stocks.append({**item, "reasons": weak_reasons})
+
+            # Warnings
+            warnings_list = scoring.get("mien_diem", [])
+            if warnings_list:
+                warn_item = {**item, "warnings": [w["ten"] for w in warnings_list],
+                             "penalty": sum(w["diem"] for w in warnings_list)}
+                warnings.append(warn_item)
+
+        scored_stocks.sort(key=lambda x: x["score"], reverse=True)
+        money_flow_stocks.sort(key=lambda x: x["money_flow_score"], reverse=True)
+        buy_signals.sort(key=lambda x: x["score"], reverse=True)
+        weak_stocks.sort(key=lambda x: x["score"])
+
+        rankings["top_20_manh_nhat"] = scored_stocks[:20]
+        rankings["top_20_dong_tien"] = money_flow_stocks[:20]
+        rankings["top_10_tin_hieu_mua"] = buy_signals[:10]
+        rankings["top_10_suy_yeu"] = weak_stocks[:10]
+        rankings["canh_bao"] = warnings[:20]
+
+        # Summary stats
+        if scored_stocks:
+            avg_score = sum(s["score"] for s in scored_stocks if s["score"] > 0) / max(
+                sum(1 for s in scored_stocks if s["score"] > 0), 1)
+            rankings["thong_ke"] = {
+                "tong_mau_phan_tich": len(scored_stocks),
+                "diem_trung_binh": round(avg_score, 1),
+                "so_manh": sum(1 for s in scored_stocks if s["score"] >= 70),
+                "so_trung_binh": sum(1 for s in scored_stocks if 50 <= s["score"] < 70),
+                "so_yeu": sum(1 for s in scored_stocks if s["score"] < 50),
+                "so_co_tin_hieu_mua": len(buy_signals),
+                "so_canh_bao": len(warnings),
+            }
+        return rankings
+
     # Public methods
     def export_all(self, symbols: list[str] = None):
         print("=" * 50)
@@ -308,7 +454,7 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         else:
             symbol_market = {s: "HOSE" for s in symbols}
         qualified_syms = self._screen_by_liquidity(symbol_market)
-        print(f"\nPhân tích {len(qualified_syms)} mã có thanh khoản ≥ 300k CP/phiên")
+        print(f"\nPhân tích {len(qualified_syms)} mã có thanh khoản ≥ 500k CP/phiên (TB 20 phiên)")
         print("\n--- VNINDEX ---")
         idx_data = self._fetch_vnindex()
         market_data = self._build_breadth_from_vnindex(idx_data)
@@ -351,6 +497,9 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         print("  Market overview...", end=" ")
         market_overview = self._build_market_overview(idx_data, market_data, sectors)
         print("OK")
+        print("\n--- XẾP HẠNG TÍN HIỆU ---")
+        rankings = self._build_rankings(stock_data)
+        print(f"  Top 20 mạnh nhất, Top 20 dòng tiền, Top 10 tín hiệu mua, {len(rankings.get('canh_bao', []))} cảnh báo")
         print("\n--- GHI FILE ---")
         export = {
             "exported_at": datetime.now().isoformat(),
@@ -366,6 +515,7 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
             "trading_sessions": trading_sessions, "sectors": sectors,
             "foreign": {"sessions": trading_sessions, "top_buy": [], "top_sell": []},
             "proprietary": {"sessions": trading_sessions, "top_buy": [], "top_sell": []},
+            "rankings": rankings,
             "stocks": stock_data,
         }
         return self._write_output(export)

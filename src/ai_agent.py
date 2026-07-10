@@ -4,6 +4,7 @@ from datetime import datetime
 from src.config import config
 from src.ssi_client import SSIClient
 from src.technical_analysis import TechnicalAnalyzer
+from src.signal_scoring import SignalScorer, compute_smart_money_patterns, compute_position_score
 from src.news_fetcher import NewsFetcher
 
 
@@ -53,9 +54,35 @@ class AIStockAgent:
 
         # 2. Phân tích kỹ thuật
         tech_signal = {}
+        smart_money = {}
+        signal_scoring = {}
+        position_score = {}
         if not df.empty:
             analyzer = TechnicalAnalyzer(df)
             tech_signal = analyzer.get_technical_signal()
+            indicators = tech_signal.get("indicators", {})
+
+            # Smart Money Patterns
+            smart_money = compute_smart_money_patterns(df)
+            indicators.update(smart_money)
+
+            # Position Score
+            position_score = compute_position_score(indicators)
+            indicators.update(position_score)
+
+            # 100-point Signal Scoring
+            scorer = SignalScorer(df, indicators, symbol=symbol, market=market)
+            signal_scoring = scorer.compute_all()
+
+            # Add new signals to existing signal list
+            for sig in signal_scoring.get("tin_hieu", []):
+                existing = tech_signal.get("signals", [])
+                if sig not in existing:
+                    existing.append(sig)
+
+            tech_signal["signal_scoring"] = signal_scoring
+            tech_signal["smart_money"] = smart_money
+            tech_signal["position_score"] = position_score
 
         # 3. Thông tin doanh nghiệp
         company_info = self.ssi.get_company_info(symbol)

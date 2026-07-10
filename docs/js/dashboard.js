@@ -61,7 +61,7 @@ function switchTab(tabId) {
         'market-report': 'Nhận định thị trường',
         'cashflow': 'Dòng tiền',
         'sectors': 'Phân tích ngành',
-        'signals': 'Top tín hiệu',
+        'signals': 'Tín hiệu kỹ thuật (100đ)',
         'watchlist': 'Watchlist',
     };
     document.getElementById('pageTitle').textContent = titles[tabId] || tabId;
@@ -255,25 +255,29 @@ function renderBreadth() {
     });
 }
 
-/* ===== SIGNALS LIST ===== */
+/* ===== SIGNALS LIST (Dashboard card) ===== */
 function renderSignals() {
     const stocks = DATA.stocks || {};
     const signals = [];
+    const rankings = DATA.rankings || {};
+    const topStrong = rankings.top_20_manh_nhat || [];
+
+    // Use 100-point scoring data
     Object.entries(stocks).forEach(([sym, s]) => {
         if (s.error) return;
         const tech = s.technical || {};
+        const scoring = tech.signal_scoring || {};
         const ind = tech.indicators || {};
-        const score = tech.score || 0;
         const change = ind.price_change_pct_1d || 0;
         const price = ind.current_price || 0;
-        const volRatio = ind.volume_ratio || 0;
-        const macd = ind.macd_histogram_standard;
-        const rsi = ind.rsi_14;
+        const score = scoring.tong_diem || 0;
+        const grade = scoring.xep_loai || 'LOAI';
+        const sm = tech.smart_money || {};
 
-        if (score >= 2) signals.push({ symbol: sym, type: 'breakout', label: 'Tích lũy', price, change, score });
-        if (macd != null && macd >= 0 && score >= 1) signals.push({ symbol: sym, type: 'macd', label: 'MACD Bullish', price, change, score });
-        if (rsi != null && rsi >= 50 && rsi <= 60) signals.push({ symbol: sym, type: 'rsi', label: 'RSI > 50', price, change, score });
-        if (volRatio >= 1.5) signals.push({ symbol: sym, type: 'volume', label: 'KL đột biến', price, change, score });
+        if (score >= 70) signals.push({ symbol: sym, type: 'breakout', label: `${grade} (${score}đ)`, price, change, score });
+        if (score >= 60 && score < 70) signals.push({ symbol: sym, type: 'macd', label: `${grade} (${score}đ)`, price, change, score });
+        if (sm.supertrend_signal === 'uptrend') signals.push({ symbol: sym, type: 'rsi', label: 'SuperTrend UP', price, change, score });
+        if (ind.volume_ratio >= 1.5) signals.push({ symbol: sym, type: 'volume', label: 'KL đột biến', price, change, score });
     });
     signals.sort((a, b) => b.score - a.score);
     document.getElementById('signalCount').textContent = signals.length;
@@ -650,7 +654,7 @@ function renderHeatmap() {
     }).join('');
 }
 
-/* ===== SIGNALS TABLE ===== */
+/* ===== SIGNALS TABLE - ENHANCED 100-POINT SYSTEM ===== */
 function filterSignals(filter) {
     currentSignalFilter = filter;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -659,58 +663,201 @@ function filterSignals(filter) {
 }
 
 function renderSignalsTable() {
-    const stocks = DATA.stocks || {};
-    const rows = [];
-    Object.entries(stocks).forEach(([sym, s]) => {
-        if (s.error) return;
-        const tech = s.technical || {};
-        const ind = tech.indicators || {};
-        const signals = [];
-        const score = tech.score || 0;
-        const change = ind.price_change_pct_1d || 0;
-        const price = ind.current_price || 0;
-        const rsi = ind.rsi_14;
-        const macd = ind.macd_histogram_standard;
-        const vol = ind.volume_ratio || 0;
-        const macdBullish = macd != null && macd >= 0;
-        const rsiBullish = rsi != null && rsi > 50;
-        const volumeSpike = vol >= 1.5;
-        const isBreakout = score >= 2;
+    if (!DATA || !DATA.rankings) return;
+    const r = DATA.rankings;
+    const stats = r.thong_ke || {};
 
-        if (isBreakout) signals.push('Breakout');
-        if (macdBullish) signals.push('MACD Bullish');
-        if (rsiBullish) signals.push('RSI > 50');
-        if (volumeSpike) signals.push('KL đột biến');
+    // Update stats
+    document.getElementById('techTotalStocks').textContent = stats.tong_mau_phan_tich || '--';
+    document.getElementById('techAvgScore').textContent = stats.diem_trung_binh != null ? stats.diem_trung_binh.toFixed(1) : '--';
+    document.getElementById('techStrongCount').textContent = stats.so_manh || '--';
+    document.getElementById('techBuySignals').textContent = stats.so_co_tin_hieu_mua || '--';
+    document.getElementById('techWarningCount').textContent = stats.so_canh_bao || '--';
 
-        const matchFilter = currentSignalFilter === 'all' ||
-            (currentSignalFilter === 'breakout' && isBreakout) ||
-            (currentSignalFilter === 'macd_bullish' && macdBullish) ||
-            (currentSignalFilter === 'rsi_bullish' && rsiBullish) ||
-            (currentSignalFilter === 'volume_spike' && volumeSpike);
+    // Render the right view based on filter
+    const container = document.getElementById('signalRankingsContainer');
+    const filter = currentSignalFilter;
 
-        if (matchFilter && signals.length > 0) {
-            rows.push({ symbol: sym, signals, price, change, rsi, macd, volume: vol, score });
-        }
-    });
-    rows.sort((a, b) => b.score - a.score);
-
-    const tbody = document.getElementById('signalsBody');
-    if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Không có tín hiệu phù hợp</td></tr>';
-        return;
+    if (filter === 'strong' || filter === 'all') {
+        container.innerHTML = renderTopStrongHtml(r.top_20_manh_nhat || []);
     }
-    tbody.innerHTML = rows.map(r => `
-        <tr onclick="showStockDetail('${r.symbol}')" style="cursor:pointer">
-            <td><strong>${r.symbol}</strong></td>
-            <td>${r.signals.map(s => `<span class="signal-type ${s.includes('Breakout') ? 'breakout' : s.includes('MACD') ? 'macd' : s.includes('RSI') ? 'rsi' : 'volume'}">${s}</span>`).join(' ')}</td>
-            <td>${formatNumber(r.price)}</td>
-            <td class="${r.change >= 0 ? 'positive' : 'negative'}">${formatPercent(r.change)}</td>
-            <td>${r.rsi != null ? r.rsi.toFixed(1) : '--'}</td>
-            <td class="${(r.macd || 0) >= 0 ? 'positive' : 'negative'}">${r.macd != null ? r.macd.toFixed(2) : '--'}</td>
-            <td>${r.volume > 0 ? r.volume.toFixed(1) + 'x' : '--'}</td>
-            <td><span class="signal-score">${r.score}</span></td>
+    if (filter === 'moneyflow') {
+        container.innerHTML = renderTopMoneyFlowHtml(r.top_20_dong_tien || []);
+    }
+    if (filter === 'buy') {
+        container.innerHTML = renderBuySignalsHtml(r.top_10_tin_hieu_mua || []);
+    }
+    if (filter === 'weak') {
+        container.innerHTML = renderWeakHtml(r.top_10_suy_yeu || []);
+    }
+}
+
+function renderTopStrongHtml(list) {
+    if (!list.length) return '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Chưa có dữ liệu</div>';
+    return `
+        <div class="card full-width">
+            <div class="card-header">
+                <h3><i class="fas fa-trophy" style="color:#f59e0b"></i> Top 20 cổ phiếu mạnh nhất (theo tổng điểm 100)</h3>
+                <span class="card-badge">${list.length}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <thead>
+                            <tr><th>#</th><th>Mã</th><th>Điểm</th><th>XL</th><th>Giá</th><th>%</th><th>RSI</th><th>RVOL</th><th>BOS</th><th>FVG</th><th>SuperTrend</th></tr>
+                        </thead>
+                        <tbody>
+                            ${list.map((s, i) => {
+                                const gradeClass = s.grade === 'A+' || s.grade === 'A' ? 'positive' : s.grade === 'B+' ? '' : 'negative';
+                                return `<tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
+                                    <td>${i + 1}</td>
+                                    <td><strong>${s.symbol}</strong></td>
+                                    <td style="font-weight:700;color:${s.score >= 80 ? '#22c55e' : s.score >= 70 ? '#f59e0b' : s.score >= 60 ? '#3b82f6' : '#ef4444'}">${s.score}</td>
+                                    <td class="${gradeClass}">${s.grade || '--'}</td>
+                                    <td>${formatNumber(s.price)}</td>
+                                    <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
+                                    <td>${s.rsi != null ? s.rsi.toFixed(1) : '--'}</td>
+                                    <td>${s.vol_ratio != null ? s.vol_ratio.toFixed(1) + 'x' : '--'}</td>
+                                    <td style="font-size:0.7rem">${s.bos || '--'}</td>
+                                    <td style="font-size:0.7rem">${s.fvg && s.fvg !== 'none' ? s.fvg : '--'}</td>
+                                    <td style="color:${s.supertrend === 'uptrend' ? '#22c55e' : s.supertrend === 'downtrend' ? '#ef4444' : '#8899aa'}">${s.supertrend || '--'}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="card full-width" style="margin-top:16px">
+            <div class="card-header">
+                <h3><i class="fas fa-money-bill-wave" style="color:#22c55e"></i> Top 20 dòng tiền vào mạnh nhất</h3>
+                <span class="card-badge">${(DATA.rankings.top_20_dong_tien || []).length}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <thead>
+                            <tr><th>#</th><th>Mã</th><th>Điểm MF</th><th>RVOL</th><th>MFI</th><th>Giá</th><th>%</th><th>OBV</th><th>Tổng điểm</th></tr>
+                        </thead>
+                        <tbody>
+                            ${renderMoneyFlowRows(DATA.rankings.top_20_dong_tien || [])}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderMoneyFlowRows(list) {
+    if (!list.length) return '<tr><td colspan="9" class="empty-row">Chưa có dữ liệu</td></tr>';
+    return list.map((s, i) => `
+        <tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
+            <td>${i + 1}</td>
+            <td><strong>${s.symbol}</strong></td>
+            <td style="font-weight:700;color:#22c55e">${s.money_flow_score || 0}</td>
+            <td>${s.vol_ratio != null ? s.vol_ratio.toFixed(1) + 'x' : '--'}</td>
+            <td>${s.mfi != null ? s.mfi.toFixed(1) : '--'}</td>
+            <td>${formatNumber(s.price)}</td>
+            <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
+            <td>${s.obv_trend || '--'}</td>
+            <td style="font-weight:700;color:${s.score >= 80 ? '#22c55e' : s.score >= 70 ? '#f59e0b' : '#8899aa'}">${s.score}</td>
         </tr>
     `).join('');
+}
+
+function renderTopMoneyFlowHtml(list) {
+    return `
+        <div class="card full-width">
+            <div class="card-header">
+                <h3><i class="fas fa-money-bill-wave" style="color:#22c55e"></i> Top 20 dòng tiền vào mạnh nhất</h3>
+                <span class="card-badge">${list.length}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <thead>
+                            <tr><th>#</th><th>Mã</th><th>Điểm MF</th><th>RVOL</th><th>MFI</th><th>Giá</th><th>%</th><th>OBV</th><th>Tổng điểm</th></tr>
+                        </thead>
+                        <tbody>${renderMoneyFlowRows(list)}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderBuySignalsHtml(list) {
+    if (!list.length) return '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Chưa có tín hiệu mua</div>';
+    return `
+        <div class="card full-width">
+            <div class="card-header">
+                <h3><i class="fas fa-bell" style="color:#3b82f6"></i> Top 10 tín hiệu mua mới</h3>
+                <span class="card-badge">${list.length}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <thead>
+                            <tr><th>#</th><th>Mã</th><th>Điểm</th><th>XL</th><th>Giá</th><th>%</th><th>RVOL</th><th>Lý do</th></tr>
+                        </thead>
+                        <tbody>
+                            ${list.map((s, i) => {
+                                const reasons = s.reasons ? s.reasons.slice(0, 2).join(', ') : '';
+                                return `<tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
+                                    <td>${i + 1}</td>
+                                    <td><strong>${s.symbol}</strong></td>
+                                    <td style="font-weight:700;color:${s.score >= 80 ? '#22c55e' : s.score >= 70 ? '#f59e0b' : '#3b82f6'}">${s.score}</td>
+                                    <td style="color:${s.grade === 'A+' || s.grade === 'A' ? '#22c55e' : '#f59e0b'}">${s.grade || '--'}</td>
+                                    <td>${formatNumber(s.price)}</td>
+                                    <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
+                                    <td>${s.vol_ratio != null ? s.vol_ratio.toFixed(1) + 'x' : '--'}</td>
+                                    <td style="font-size:0.72rem;color:#3b82f6;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reasons || '--'}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderWeakHtml(list) {
+    if (!list.length) return '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Chưa có cổ phiếu suy yếu</div>';
+    return `
+        <div class="card full-width">
+            <div class="card-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i> Cảnh báo cổ phiếu suy yếu</h3>
+                <span class="card-badge">${list.length}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <thead>
+                            <tr><th>#</th><th>Mã</th><th>Điểm</th><th>Giá</th><th>%</th><th>RSI</th><th>Lý do</th><th>Penalty</th></tr>
+                        </thead>
+                        <tbody>
+                            ${list.map((s, i) => {
+                                const reasons = s.reasons ? s.reasons.slice(0, 2).join(', ') : '';
+                                const penalty = s.penalty || 0;
+                                return `<tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
+                                    <td>${i + 1}</td>
+                                    <td><strong>${s.symbol}</strong></td>
+                                    <td style="font-weight:700;color:#ef4444">${s.score}</td>
+                                    <td>${formatNumber(s.price)}</td>
+                                    <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
+                                    <td>${s.rsi != null ? s.rsi.toFixed(1) : '--'}</td>
+                                    <td style="font-size:0.72rem;color:#ef4444;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reasons || '--'}</td>
+                                    <td style="color:#ef4444">${penalty < 0 ? penalty : '--'}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /* ===== WATCHLIST ===== */
@@ -824,6 +971,8 @@ function showStockDetail(symbol) {
     const tech = s.technical || {};
     const ind = tech.indicators || {};
     const signals = tech.signals || [];
+    const scoring = tech.signal_scoring || {};
+    const sm = tech.smart_money || {};
 
     const price = ind.current_price || 0;
     const change = ind.price_change_pct_1d || 0;
@@ -858,6 +1007,28 @@ function showStockDetail(symbol) {
         { label: 'NN ròng (tỷ)', value: ind.foreign_net_today },
         { label: 'Giá/MA20', value: ind.price_vs_ma20_pct != null ? formatPercent(ind.price_vs_ma20_pct) : null },
         { label: 'Giá/MA50', value: ind.price_vs_ma50_pct != null ? formatPercent(ind.price_vs_ma50_pct) : null },
+        { label: 'EMA20', value: ind.ema_20 },
+        { label: 'EMA50', value: ind.ema_50 },
+        { label: 'EMA200', value: ind.ema_200 },
+        { label: 'MFI', value: ind.mfi, signal: ind.mfi > 60 ? 'dòng tiền mạnh' : ind.mfi > 50 ? 'bình thường' : 'yếu' },
+        { label: 'CMF', value: ind.cmf, signal: (ind.cmf || 0) > 0 ? 'dương' : 'âm' },
+        { label: 'SuperTrend', value: sm.supertrend, signal: sm.supertrend_signal },
+        { label: 'Stoch RSI %K', value: ind.stoch_rsi_k },
+        { label: 'Stoch RSI %D', value: ind.stoch_rsi_d },
+        { label: '+DI', value: ind.plus_di },
+        { label: '-DI', value: ind.minus_di },
+        { label: 'BOS', value: sm.bos },
+        { label: 'CHOCH', value: sm.choch },
+        { label: 'FVG', value: sm.fvg_signal && sm.fvg_signal !== 'none' ? sm.fvg_signal : 'không' },
+        { label: 'Liquidity Sweep', value: sm.liquidity_sweep && sm.liquidity_sweep !== 'none' ? sm.liquidity_sweep : 'không' },
+        { label: 'Premium/Discount', value: sm.premium_discount },
+        { label: 'Higher High', value: sm.higher_high ? 'Có' : 'Không' },
+        { label: 'Higher Low', value: sm.higher_low ? 'Có' : 'Không' },
+        { label: 'Cách ATH', value: ind.distance_to_ath != null ? '-' + ind.distance_to_ath.toFixed(1) + '%' : null },
+        { label: 'Cách 52W High', value: ind.distance_to_52w_high != null ? '-' + ind.distance_to_52w_high.toFixed(1) + '%' : null },
+        { label: 'Cách EMA20', value: ind.distance_to_ema20 != null ? formatPercent(ind.distance_to_ema20) : null },
+        { label: 'Cách EMA50', value: ind.distance_to_ema50 != null ? formatPercent(ind.distance_to_ema50) : null },
+        { label: 'Cách EMA200', value: ind.distance_to_ema200 != null ? formatPercent(ind.distance_to_ema200) : null },
     ];
 
     const detail = document.getElementById('stockDetail');
@@ -868,6 +1039,47 @@ function showStockDetail(symbol) {
             <td style="color:${i.signal === 'oversold' || i.signal?.includes('mạnh') ? '#22c55e' : i.signal === 'overbought' ? '#ef4444' : '#8899aa'}">${i.signal || ''}</td>
         </tr>
     `).join('');
+
+    // Scoring breakdown
+    const chiTiet = scoring.chi_tiet || {};
+    const groups = [
+        { key: 'xu_huong', label: 'Xu hướng', max: 30, icon: 'fa-chart-line', color: '#3b82f6' },
+        { key: 'dong_tien', label: 'Dòng tiền', max: 25, icon: 'fa-money-bill-wave', color: '#22c55e' },
+        { key: 'momentum', label: 'Momentum', max: 20, icon: 'fa-rocket', color: '#f59e0b' },
+        { key: 'price_action', label: 'Price Action', max: 15, icon: 'fa-candle-sticks', color: '#a855f7' },
+        { key: 'relative_strength', label: 'RS', max: 10, icon: 'fa-gauge-high', color: '#ec4899' },
+    ];
+    const scoringHtml = groups.map(g => {
+        const data = chiTiet[g.key] || {};
+        const diem = data.diem || 0;
+        const toiDa = data.toi_da || g.max;
+        const pct = diem > 0 ? (diem / toiDa * 100) : 0;
+        return `
+            <div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px">
+                    <span style="color:${g.color}"><i class="fas ${g.icon}"></i> ${g.label}</span>
+                    <span style="font-weight:600">${diem}/${toiDa}</span>
+                </div>
+                <div class="progress-bar" style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+                    <div class="progress-fill" style="width:${pct}%;height:100%;background:${g.color};border-radius:3px;transition:width 0.5s"></div>
+                </div>
+                ${data.chi_tiet ? '<div style="font-size:0.7rem;color:#667788;margin-top:4px;line-height:1.4">' + data.chi_tiet.slice(0, 3).join('<br>') + '</div>' : ''}
+            </div>
+        `;
+    }).join('');
+
+    // Penalties
+    const penalties = scoring.mien_diem || [];
+    const penaltyHtml = penalties.length ? `
+        <div style="margin-top:12px">
+            <div style="color:#ef4444;font-size:0.85rem;margin-bottom:6px"><i class="fas fa-exclamation-triangle"></i> Hình phạt (${penalties.reduce((a, b) => a + b.diem, 0)} điểm)</div>
+            ${penalties.map(p => `<div style="font-size:0.75rem;color:#ef4444;padding:2px 0">• ${p.ten}: ${p.diem}</div>`).join('')}
+        </div>
+    ` : '';
+
+    const tongDiem = scoring.tong_diem || 0;
+    const xepLoai = scoring.xep_loai || 'LOAI';
+    const gradeColor = xepLoai === 'A+' || xepLoai === 'A' ? '#22c55e' : xepLoai === 'B+' || xepLoai === 'B' ? '#f59e0b' : xepLoai === 'C' ? '#3b82f6' : '#ef4444';
 
     detail.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
@@ -888,18 +1100,31 @@ function showStockDetail(symbol) {
             <span style="background:rgba(59,130,246,0.1);padding:6px 16px;border-radius:20px;font-size:0.85rem;border:1px solid rgba(59,130,246,0.2)">
                 Điểm: ${tech.score ?? 0}/10 | ${tech.confidence || ''}
             </span>
+            <span style="background:rgba(34,197,94,0.1);padding:6px 16px;border-radius:20px;font-size:0.85rem;border:1px solid rgba(34,197,94,0.2);font-weight:600;color:${gradeColor}">
+                ${xepLoai} (${tongDiem}/100)
+            </span>
         </div>
 
-        <h3 style="color:#8899aa;margin:16px 0 8px;font-size:1rem"><i class="fas fa-chart-line"></i> Chỉ báo kỹ thuật</h3>
-        <div class="table-responsive">
-            <table class="data-table" style="font-size:0.82rem">
-                <tr style="color:#667788;border-bottom:1px solid var(--border-color)">
-                    <th style="text-align:left;padding:8px">Chỉ báo</th>
-                    <th style="text-align:right;padding:8px">Giá trị</th>
-                    <th style="text-align:right;padding:8px">Tín hiệu</th>
-                </tr>
-                ${indicatorHtml}
-            </table>
+        <!-- Scoring Breakdown -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div style="background:rgba(0,0,0,0.15);padding:16px;border-radius:8px">
+                <h3 style="color:#8899aa;margin:0 0 12px;font-size:0.95rem"><i class="fas fa-chart-pie"></i> Chấm điểm tín hiệu</h3>
+                ${scoringHtml}
+                ${penaltyHtml}
+            </div>
+            <div>
+                <h3 style="color:#8899aa;margin:0 0 8px;font-size:1rem"><i class="fas fa-chart-line"></i> Chỉ báo kỹ thuật</h3>
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.78rem">
+                        <tr style="color:#667788;border-bottom:1px solid var(--border-color)">
+                            <th style="text-align:left;padding:6px">Chỉ báo</th>
+                            <th style="text-align:right;padding:6px">Giá trị</th>
+                            <th style="text-align:right;padding:6px">Tín hiệu</th>
+                        </tr>
+                        ${indicatorHtml}
+                    </table>
+                </div>
+            </div>
         </div>
 
         <h3 style="color:#8899aa;margin:16px 0 8px;font-size:1rem"><i class="fas fa-list"></i> Tín hiệu</h3>

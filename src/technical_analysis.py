@@ -3,7 +3,7 @@ import numpy as np
 from ta.trend import MACD, SMAIndicator, EMAIndicator, ADXIndicator, IchimokuIndicator, CCIIndicator
 from ta.momentum import RSIIndicator, StochasticOscillator, WilliamsRIndicator, ROCIndicator
 from ta.volatility import BollingerBands, AverageTrueRange
-from ta.volume import VolumeWeightedAveragePrice, OnBalanceVolumeIndicator
+from ta.volume import VolumeWeightedAveragePrice, OnBalanceVolumeIndicator, MFIIndicator
 from scipy import stats
 
 
@@ -35,6 +35,8 @@ class TechnicalAnalyzer:
         result.update(self._compute_risk_metrics())
         result.update(self._compute_pivot_points())
         result.update(self._compute_candlestick_patterns())
+        result.update(self._compute_mfi())
+        result.update(self._compute_atr_ext())
         return result
 
     def _compute_moving_averages(self) -> dict:
@@ -414,6 +416,31 @@ class TechnicalAnalyzer:
             result["pivot_r2"] = round(pivot + (high - low), 2)
             result["pivot_s1"] = round(2 * pivot - high, 2)
             result["pivot_s2"] = round(pivot - (high - low), 2)
+        return result
+
+    def _compute_mfi(self) -> dict:
+        result = {}
+        if len(self.df) >= 14:
+            try:
+                mfi = MFIIndicator(self.df["high"], self.df["low"], self.df["close"], self.df["volume"], window=14)
+                result["mfi"] = round(float(mfi.money_flow_index().iloc[-1]), 2)
+            except Exception:
+                result["mfi"] = 50
+        return result
+
+    def _compute_atr_ext(self) -> dict:
+        result = {}
+        if len(self.df) >= 15:
+            try:
+                tr = pd.concat([
+                    self.df["high"] - self.df["low"],
+                    (self.df["high"] - self.df["close"].shift()).abs(),
+                    (self.df["low"] - self.df["close"].shift()).abs()
+                ], axis=1).max(axis=1)
+                atr = tr.rolling(14).mean()
+                result["atr"] = round(float(atr.iloc[-1]), 2)
+            except Exception:
+                result["atr"] = 0
         return result
 
     def _compute_candlestick_patterns(self) -> dict:

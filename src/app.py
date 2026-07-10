@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
@@ -193,8 +194,8 @@ def main():
                 result = agent.analyze_symbol(symbol)
 
                 # Display sections
-                tab1, tab2, tab3, tab4 = st.tabs(
-                    ["📊 Tổng quan", "📈 Phân tích kỹ thuật", "📰 Tin tức", "🤖 AI Analysis"]
+                tab1, tab2, tab3, tab4, tab5 = st.tabs(
+                    ["📊 Tổng quan", "📈 Phân tích kỹ thuật", "📰 Tin tức", "🤖 AI Analysis", "🎯 Tín hiệu 100đ"]
                 )
 
                 with tab1:
@@ -337,6 +338,72 @@ def main():
                         "chỉ mang tính tham khảo. Không phải lời khuyên đầu tư tài chính. "
                         f"Phân tích lúc: {result.get('analyzed_at', 'N/A')}"
                     )
+
+                with tab5:
+                    st.subheader("🎯 Hệ thống chấm điểm tín hiệu 100 điểm")
+                    scoring = tech.get("signal_scoring", {})
+                    sm = tech.get("smart_money", {})
+                    ps = tech.get("position_score", {})
+
+                    if scoring:
+                        total = scoring.get("tong_diem", 0)
+                        grade = scoring.get("xep_loai", "LOAI")
+                        col1, col2, col3, col4 = st.columns(4)
+                        col1.metric("Tổng điểm", f"{total}/100")
+                        col2.metric("Xếp loại", grade)
+                        col3.metric("Tín hiệu", f"{scoring.get('so_luong_tin_hieu', 0)}")
+                        col4.metric("Hình phạt", f"{sum(p['diem'] for p in scoring.get('mien_diem', []))}")
+
+                        st.divider()
+                        st.subheader("Chi tiết chấm điểm")
+
+                        groups = [
+                            ("xu_huong", "📈 Xu hướng", 30, "#3b82f6"),
+                            ("dong_tien", "💵 Dòng tiền", 25, "#22c55e"),
+                            ("momentum", "🚀 Momentum", 20, "#f59e0b"),
+                            ("price_action", "🕯️ Price Action", 15, "#a855f7"),
+                            ("relative_strength", "⚡ RS", 10, "#ec4899"),
+                        ]
+                        for key, label, toi_da, color in groups:
+                            data = scoring.get("chi_tiet", {}).get(key, {})
+                            diem = data.get("diem", 0)
+                            chi_tiet = data.get("chi_tiet", [])
+                            pct = diem / toi_da if toi_da > 0 else 0
+                            st.markdown(f"**{label}**: {diem}/{toi_da}")
+                            st.progress(pct, text="")
+                            if chi_tiet:
+                                for d in chi_tiet:
+                                    st.caption(d)
+
+                        st.divider()
+                        st.subheader("⚠️ Hình phạt")
+                        penalties = scoring.get("mien_diem", [])
+                        if penalties:
+                            for p in penalties:
+                                st.warning(f"**{p['ten']}**: {p['diem']} điểm")
+                        else:
+                            st.info("Không có hình phạt")
+
+                    st.divider()
+                    st.subheader("🔍 Smart Money Patterns")
+                    if sm:
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("BOS", sm.get("bos", "none"))
+                        c2.metric("CHOCH", sm.get("choch", "none"))
+                        c3.metric("FVG", sm.get("fvg_signal", "none"))
+                        c1.metric("Liquidity Sweep", sm.get("liquidity_sweep", "none"))
+                        c2.metric("SuperTrend", sm.get("supertrend_signal", "neutral"))
+                        c3.metric("Premium/Discount", sm.get("premium_discount", "neutral"))
+
+                    st.divider()
+                    st.subheader("📏 Vị trí giá")
+                    if ps:
+                        cols = st.columns(5)
+                        cols[0].metric("Cách EMA20", f"{ps.get('distance_to_ema20', 0):.1f}%")
+                        cols[1].metric("Cách EMA50", f"{ps.get('distance_to_ema50', 0):.1f}%")
+                        cols[2].metric("Cách EMA200", f"{ps.get('distance_to_ema200', 0):.1f}%")
+                        cols[3].metric("Cách ATH", f"-{ps.get('distance_to_ath', 0):.1f}%")
+                        cols[4].metric("Cách 52W H", f"-{ps.get('distance_to_52w_high', 0):.1f}%")
 
             except Exception as e:
                 st.error(f"❌ Lỗi phân tích {symbol}: {str(e)}")
