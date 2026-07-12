@@ -1,0 +1,171 @@
+{
+  "per_symbol_strategies": {
+    "ACB": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL0_MOM1|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": 2.7,
+      "sharpe": 0.24,
+      "win_rate": 60.8,
+      "trades": 51,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "FPT": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": 11.0,
+      "sharpe": 0.53,
+      "win_rate": 60.5,
+      "trades": 43,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "HPG": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND1_VOL0_MOM1|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": 7.9,
+      "sharpe": 0.67,
+      "win_rate": 70.0,
+      "trades": 20,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "MBB": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL0_MOM1|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": 1.1,
+      "sharpe": 0.16,
+      "win_rate": 67.4,
+      "trades": 46,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "SSI": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL1_MOM1|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": 7.8,
+      "sharpe": 0.45,
+      "win_rate": 72.2,
+      "trades": 36,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "TCB": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL1_MOM1|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "cagr": -1.1,
+      "sharpe": 0.04,
+      "win_rate": 56.7,
+      "trades": 30,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    },
+    "VCB": {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND1_VOL1_MOM1|ADXF1_MFIF0_SUPERT0_CMFF0",
+      "cagr": 5.5,
+      "sharpe": 0.87,
+      "win_rate": 70.0,
+      "trades": 10,
+      "ema_fast": 10,
+      "ema_slow": 50,
+      "rsi_period": 7,
+      "rsi_oversold": 25,
+      "rsi_overbought": 65,
+      "macd_fast": 8,
+      "macd_slow": 17,
+      "macd_signal": 7
+    }
+  },
+  "multi_symbol_strategies": [
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP15|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP20|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL5_TP10|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL5_TP15|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL5_TP20|TREND0_VOL1_MOM0|ADXF0_MFIF0_SUPERT0_CMFF0",
+      "pos": 4,
+      "neg": 24,
+      "pos_cagr": 8.5
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP10|TREND1_VOL1_MOM1|ADXF0_MFIF0_SUPERT1_CMFF0",
+      "pos": 7,
+      "neg": 21,
+      "pos_cagr": 5.4
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP15|TREND1_VOL1_MOM1|ADXF0_MFIF0_SUPERT1_CMFF0",
+      "pos": 7,
+      "neg": 21,
+      "pos_cagr": 5.4
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL3_TP20|TREND1_VOL1_MOM1|ADXF0_MFIF0_SUPERT1_CMFF0",
+      "pos": 7,
+      "neg": 21,
+      "pos_cagr": 5.4
+    },
+    {
+      "key": "EMA10_50|RSI7_25_65|MACD8_17_7|ADX20|ST7_2.0|VOL10|MFI55|SL5_TP10|TREND1_VOL1_MOM1|ADXF0_MFIF0_SUPERT1_CMFF0",
+      "pos": 7,
+      "neg": 21,
+      "pos_cagr": 5.4
+    }
+  ]
+}

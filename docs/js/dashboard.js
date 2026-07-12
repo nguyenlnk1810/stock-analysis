@@ -88,6 +88,7 @@ function renderAll() {
     renderHeatmap();
     renderSignalsTable();
     renderWatchlist();
+    renderBacktestTable();
     updateAIRecommendationBadge();
 }
 
@@ -1155,6 +1156,89 @@ function updateAIRecommendationBadge() {
     const badge = document.getElementById('aiBadge');
     badge.className = 'ai-recommendation-badge';
     badge.style.border = '1px solid ' + (action.includes('MUA') || action.includes('TÍCH') ? 'rgba(34,197,94,0.3)' : action.includes('BÁN') || action.includes('GIẢM') ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)');
+}
+
+/* ===== BACKTEST TABLE ===== */
+let BACKTEST_DATA = null;
+function loadBacktestData(callback) {
+    if (BACKTEST_DATA) { if (callback) callback(); return; }
+    if (DATA && DATA.backtest) { BACKTEST_DATA = DATA.backtest; if (callback) callback(); return; }
+    fetch('data/analysis.json').then(r => r.json()).then(d => {
+        BACKTEST_DATA = d.backtest || null;
+        if (callback) callback();
+    }).catch(() => {});
+}
+
+function renderBacktestTable() {
+    loadBacktestData(() => {
+    if (!BACKTEST_DATA) return;
+    const bt = BACKTEST_DATA;
+    const perSym = bt.per_symbol_results || {};
+    const symbols = Object.keys(perSym);
+    if (!symbols.length) return;
+
+    // Stats
+    const cagrs = symbols.map(s => perSym[s].cagr || 0);
+    const sharpes = symbols.map(s => perSym[s].sharpe || 0);
+    const wrs = symbols.map(s => perSym[s].win_rate || 0);
+    const bestCagr = Math.max(...cagrs);
+    const bestSharpe = Math.max(...sharpes);
+    const bestWr = Math.max(...wrs);
+    document.getElementById('btBestCagr').textContent = bestCagr.toFixed(1) + '%';
+    document.getElementById('btBestSharpe').textContent = bestSharpe.toFixed(2);
+    document.getElementById('btBestWR').textContent = bestWr.toFixed(1) + '%';
+    document.getElementById('btMultiSym').textContent = symbols.length + ' mã';
+
+    // Table
+    const tbody = document.getElementById('backtestTableBody');
+    tbody.innerHTML = '';
+    const sorted = symbols.sort((a, b) => (perSym[b].sharpe || 0) - (perSym[a].sharpe || 0));
+    sorted.forEach(sym => {
+        const p = perSym[sym];
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => showStockDetail(sym);
+        const cagrColor = (p.cagr || 0) >= 0 ? '#22c55e' : '#ef4444';
+        tr.innerHTML = '<td><strong>' + sym + '</strong></td>' +
+            '<td style="color:' + cagrColor + ';font-weight:600">' + (p.cagr || 0).toFixed(1) + '%</td>' +
+            '<td style="color:' + ((p.sharpe || 0) >= 0.5 ? '#22c55e' : (p.sharpe || 0) >= 0 ? '#f59e0b' : '#ef4444') + '">' + (p.sharpe || 0).toFixed(2) + '</td>' +
+            '<td>' + (p.win_rate || 0).toFixed(1) + '%</td>' +
+            '<td>' + (p.trades || 0) + '</td>' +
+            '<td style="font-size:0.75rem;color:#8899aa">' + (p.key || '').slice(0, 45) + '</td>';
+        tbody.appendChild(tr);
+    });
+
+    // Recommended params
+    const params = bt.recommended_params || {};
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">';
+    const comps = Object.keys(params);
+    if (comps.length) {
+        comps.forEach(comp => {
+            const vals = params[comp];
+            if (vals && vals.length) {
+                const valList = vals.join(', ');
+                html += '<div style="background:rgba(30,41,59,0.5);border-radius:8px;padding:12px">' +
+                    '<div style="color:#8899aa;font-size:0.7rem;text-transform:uppercase;margin-bottom:4px">' + comp + '</div>' +
+                    '<div style="color:#94a3b8;font-size:0.9rem">' + valList + '</div></div>';
+            }
+        });
+    } else {
+        // Fallback: parse best strategy
+        const bestStrat = bt.best_strategy || '';
+        if (bestStrat) {
+            bestStrat.split('|').forEach(part => {
+                const kv = part.split('_');
+                const key = kv[0];
+                const val = kv.slice(1).join('_');
+                html += '<div style="background:rgba(30,41,59,0.5);border-radius:8px;padding:12px">' +
+                    '<div style="color:#8899aa;font-size:0.7rem;text-transform:uppercase;margin-bottom:4px">' + key + '</div>' +
+                    '<div style="color:#22c55e;font-size:0.9rem;font-weight:600">' + val + '</div></div>';
+            });
+        }
+    }
+    html += '</div>';
+    document.getElementById('btParams').innerHTML = html;
+    }); // end loadBacktestData callback
 }
 
 /* ===== CLOSE MODAL ON OUTSIDE CLICK ===== */
