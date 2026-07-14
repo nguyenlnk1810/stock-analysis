@@ -722,67 +722,233 @@ class BayesianOptimizer:
 
 
 # ========================
-# 6. WALK-FORWARD ANALYZER
+# 6. ROBUST CROSS-VALIDATION (Walk-Forward + Multi-Symbol)
 # ========================
 
-class WalkForwardAnalyzer:
-    def __init__(self, df: pd.DataFrame):
-        self.df = df
+class CrossValidator:
+    def __init__(self, data: Dict[str, pd.DataFrame]):
+        self.data = data
 
-    def analyze(self, params: StrategyParams, train_years: int = 3, test_years: int = 1):
-        df = self.df.copy()
-        df["date"] = pd.to_datetime(df["date"])
-        start = df["date"].min()
-        end = df["date"].max()
-        total_days = (end - start).days
+    def walk_forward(self, strategy: StrategyParams, train_years: int = 2, test_months: int = 6) -> dict:
+        """Test strategy across multiple time windows on multiple symbols.
+        Returns aggregated robustness metrics."""
+        window_results = []
+        for sym, df in self.data.items():
+            df = df.copy()
+            df["date"] = pd.to_datetime(df["date"])
+            start = df["date"].min()
+            end = df["date"].max()
+            window_start = start
+            while True:
+                train_end = window_start + pd.DateOffset(years=train_years)
+                test_end = train_end + pd.DateOffset(months=test_months)
+                if test_end > end:
+                    break
+                train_df = df[(df["date"] >= window_start) & (df["date"] < train_end)]
+                test_df = df[(df["date"] >= train_end) & (df["date"] < test_end)]
+                if len(train_df) < 100 or len(test_df) < 20:
+                    pass
+                else:
+                    executor = BacktestExecutor()
+                    test_result = executor.run(test_df, strategy)
+                    train_result = executor.run(train_df, strategy)
+                    window_results.append({
+                        "symbol": sym,
+                        "train_start": str(window_start.date()),
+                        "test_start": str(train_end.date()),
+                        "test_end": str(test_end.date()),
+                        "train_trades": train_result.total_trades,
+                        "train_cagr": train_result.cagr_pct,
+                        "train_sharpe": train_result.sharpe_ratio,
+                        "test_trades": test_result.total_trades,
+                        "test_cagr": test_result.cagr_pct,
+                        "test_sharpe": test_result.sharpe_ratio,
+                        "test_max_dd": test_result.max_drawdown_pct,
+                    })
+                window_start += pd.DateOffset(months=6)
 
-        results = []
-        window_start = start
-        while True:
-            train_end = window_start + pd.DateOffset(years=train_years)
-            test_end = train_end + pd.DateOffset(years=test_years)
-            if test_end > end:
-                break
+        if not window_results:
+            return {"consistency_score": 0, "avg_test_cagr": 0, "windows": 0}
 
-            train_df = df[(df["date"] >= window_start) & (df["date"] < train_end)]
-            test_df = df[(df["date"] >= train_end) & (df["date"] < test_end)]
+        test_cagrs = [w["test_cagr"] for w in window_results if w["test_trades"] >= 2]
+        test_sharpes = [w["test_sharpe"] for w in window_results if w["test_trades"] >= 2]
+        train_cagrs = [w["train_cagr"] for w in window_results if w["train_trades"] >= 2]
 
-            if len(train_df) < 100 or len(test_df) < 20:
-                window_start += pd.DateOffset(years=1)
-                continue
+        consistency = 0
+        if test_cagrs:
+            positive_windows = sum(1 for c in test_cagrs if c > 0)
+            consistency = positive_windows / len(test_cagrs) * 100 if test_cagrs else 0
 
-            # Train
-            ic = IndicatorComputer(train_df)
-            train_indicators = ic.compute_all(params)
+        # Penalize if train is good but test is bad (overfitting gap)
+        avg_train = np.mean(train_cagrs) if train_cagrs else 0
+        avg_test = np.mean(test_cagrs) if test_cagrs else 0
+        overfit_penalty = max(0, avg_train - avg_test * 2) * 0.5 if avg_test > 0 else max(0, avg_train) * 2
 
-            # Test
-            executor = BacktestExecutor()
-            test_result = executor.run(test_df, params)
-            results.append({
-                "train_start": str(window_start.date()),
-                "train_end": str(train_end.date()),
-                "test_start": str(train_end.date()),
-                "test_end": str(test_end.date()),
-                "test_trades": test_result.total_trades,
-                "test_return": test_result.total_return_pct,
-                "test_sharpe": test_result.sharpe_ratio,
-                "test_max_dd": test_result.max_drawdown_pct,
-            })
-            window_start += pd.DateOffset(years=1)
+        # Composite robustness
+        robustness = 0
+        if test_cagrs:
+            robustness += min(consistency * 0.3, 30)
+            robustness += min(max(avg_test, 0) * 0.5, 25)
+            robustness += min(np.mean(test_sharpes) * 5 if test_sharpes else 0, 20)
+            robustness -= min(overfit_penalty, 25)
+            robustness = max(0, min(100, robustness))
 
+        unique_symbols = len(set(w["symbol"] for w in window_results if w["test_trades"] >= 2))
+
+        return {
+            "symbols_tested": unique_symbols,
+            "total_windows": len(window_results),
+            "positive_windows": len([w for w in window_results if w["test_cagr"] > 0 and w["test_trades"] >= 2]),
+            "consistency_pct": round(consistency, 1),
+            "avg_train_cagr": round(avg_train, 2),
+            "avg_test_cagr": round(avg_test, 2),
+            "avg_test_sharpe": round(np.mean(test_sharpes), 2) if test_sharpes else 0,
+            "avg_test_maxdd": round(np.mean([w["test_max_dd"] for w in window_results if w["test_trades"] >= 2]), 2),
+            "overfit_penalty": round(overfit_penalty, 2),
+            "robustness_score": round(robustness, 1),
+        }
+
+
+# ========================
+# 7. ENSEMBLE STRATEGY
+# ========================
+
+class EnsembleStrategy:
+    def __init__(self, strategies: List[StrategyParams], weights: List[float] = None):
+        self.strategies = strategies
+        self.weights = weights or [1.0 / len(strategies)] * len(strategies)
+
+    def run(self, df: pd.DataFrame) -> BacktestResult:
+        """Run ensemble: execute each strategy and combine signals via weighted majority vote."""
+        executor = BacktestExecutor()
+        all_trades = []
+        combined_equity = None
+
+        for i, strat in enumerate(self.strategies):
+            result = executor.run(df, strat)
+            w = self.weights[i]
+            if result.trades:
+                for t in result.trades:
+                    t.quantity = int(w * 100)
+                all_trades.extend(result.trades)
+            # Weighted equity contribution
+            eq = np.array(result.equity_curve) * w
+            if combined_equity is None:
+                combined_equity = eq
+            else:
+                min_len = min(len(combined_equity), len(eq))
+                combined_equity = combined_equity[:min_len] + eq[:min_len]
+
+        # Build ensemble result
+        ensemble = BacktestResult(strategy=self.strategies[0], symbol="ENSEMBLE")
+        ensemble.trades = all_trades
+        ensemble.total_trades = len(all_trades)
+        ensemble.win_trades = sum(1 for t in all_trades if t.pnl_pct > 0)
+        ensemble.loss_trades = sum(1 for t in all_trades if t.pnl_pct <= 0)
+        ensemble.win_rate = ensemble.win_trades / max(ensemble.total_trades, 1) * 100
+        ensemble.equity_curve = combined_equity.tolist() if combined_equity is not None else [1.0]
+        executor._compute_metrics(ensemble, df)
+        return ensemble
+
+
+# ========================
+# 8. INDICATOR ANALYZER
+# ========================
+
+class IndicatorAnalyzer:
+    def __init__(self):
+        self.indicator_stats = defaultdict(lambda: {"count": 0, "wins": 0, "total_composite": 0})
+
+    def analyze_top_strategies(self, ranked: List[BacktestResult], top_n: int = 50):
+        for r in ranked[:top_n]:
+            key = r.strategy.combination_key
+            parts = key.split("|")
+            for part in parts:
+                self.indicator_stats[part]["count"] += 1
+                self.indicator_stats[part]["wins"] += 1 if r.cagr_pct > 0 else 0
+                self.indicator_stats[part]["total_composite"] += r.composite_score
+
+        # Calculate success rates
+        results = {}
+        for ind, stats in sorted(self.indicator_stats.items(), key=lambda x: x[1]["count"], reverse=True):
+            results[ind] = {
+                "count": stats["count"],
+                "win_rate": round(stats["wins"] / max(stats["count"], 1) * 100, 1),
+                "avg_composite": round(stats["total_composite"] / max(stats["count"], 1), 1),
+            }
         return results
 
 
 # ========================
-# 7. STRATEGY RANKER
+# 9. STRATEGY RANKER (ENHANCED)
 # ========================
 
 class StrategyRanker:
     def __init__(self):
         self.rankings = []
 
-    def rank(self, results: List[BacktestResult]) -> List[BacktestResult]:
-        filtered = [r for r in results if r.total_trades >= 3 and r.win_rate > 20 and r.cagr_pct > 0]
+    def rank(self, results: List[BacktestResult], cv_results: Dict[str, dict] = None,
+             min_symbols: int = 1, min_trades: int = 5, min_win_rate: float = 30,
+             min_sharpe: float = 0.3, max_dd: float = 30, robustness_min: float = 0) -> List[BacktestResult]:
+        filtered = []
+
+        # Group by strategy key
+        from collections import defaultdict as dd
+        strat_results = dd(list)
+        for r in results:
+            strat_results[r.strategy.combination_key].append(r)
+
+        for key, group in strat_results.items():
+            # Must work on multiple symbols
+            symbols_with_trades = len(set(r.symbol for r in group if r.total_trades >= min_trades))
+            if symbols_with_trades < min_symbols:
+                continue
+
+            # Average across symbols
+            avg_cagr = np.mean([r.cagr_pct for r in group if r.cagr_pct != 0]) if any(r.cagr_pct != 0 for r in group) else 0
+            avg_sharpe = np.mean([r.sharpe_ratio for r in group if r.sharpe_ratio != 0]) if any(r.sharpe_ratio != 0 for r in group) else 0
+            avg_wr = np.mean([r.win_rate for r in group if r.win_rate > 0]) if any(r.win_rate > 0 for r in group) else 0
+            avg_dd = np.mean([r.max_drawdown_pct for r in group if r.max_drawdown_pct > 0]) if any(r.max_drawdown_pct > 0 for r in group) else 100
+            total_trades = sum(r.total_trades for r in group)
+            avg_pf = np.mean([r.profit_factor for r in group if r.profit_factor > 1]) if any(r.profit_factor > 1 for r in group) else 0
+
+            if avg_cagr <= 0 or avg_sharpe < min_sharpe or avg_wr < min_win_rate or avg_dd > max_dd or total_trades < min_trades:
+                continue
+
+            # Composite score (enhanced)
+            comp = 0
+            comp += min(avg_sharpe * 12, 20)
+            comp += min(max(avg_cagr, 0) * 0.8, 15)
+            comp += min(avg_wr * 0.12, 12)
+            comp += min((avg_pf - 1) * 8 if avg_pf > 1 else 0, 12)
+            comp += min(symbols_with_trades * 3, 12)
+            comp += min(max(30 - avg_dd, 0) * 0.5, 10)
+            comp += min(total_trades * 0.3, 10)
+            comp += min(avg_wr * 0.05, 5)
+
+            # Boost by cross-validation robustness
+            robustness_boost = 0
+            if cv_results and key in cv_results:
+                robust = cv_results[key].get("robustness_score", 0)
+                if robust >= robustness_min:
+                    robustness_boost = min(robust * 0.15, 10)
+            comp += robustness_boost
+
+            # Use first result as template
+            best_result = max(group, key=lambda r: r.composite_score)
+            best_result.composite_score = round(comp, 2)
+            best_result._extra = {
+                "symbols_passed": symbols_with_trades,
+                "avg_cagr": round(avg_cagr, 2),
+                "avg_sharpe": round(avg_sharpe, 3),
+                "avg_win_rate": round(avg_wr, 1),
+                "avg_max_dd": round(avg_dd, 2),
+                "total_trades_all": total_trades,
+                "robustness_boost": round(robustness_boost, 2),
+                "cv_score": cv_results.get(key, {}).get("robustness_score", 0) if cv_results else 0,
+            }
+            filtered.append(best_result)
+
         filtered.sort(key=lambda r: r.composite_score, reverse=True)
         self.rankings = filtered
         return filtered
@@ -791,20 +957,23 @@ class StrategyRanker:
         return self.rankings[:n]
 
     def to_dict(self, results: List[BacktestResult]) -> List[Dict]:
-        return [{
-            "key": r.strategy.combination_key,
-            "total_trades": r.total_trades,
-            "win_rate": round(r.win_rate, 2),
-            "cagr": round(r.cagr_pct, 2),
-            "sharpe": round(r.sharpe_ratio, 3),
-            "sortino": round(r.sortino_ratio, 3),
-            "calmar": round(r.calmar_ratio, 3),
-            "max_dd": round(r.max_drawdown_pct, 2),
-            "profit_factor": round(r.profit_factor, 3),
-            "avg_trade": round(r.avg_trade_pct, 2),
-            "avg_hold": round(r.avg_hold_bars, 1),
-            "composite": round(r.composite_score, 2),
-        } for r in results[:20]]
+        out = []
+        for r in results[:20]:
+            extra = getattr(r, "_extra", {}) or {}
+            out.append({
+                "key": r.strategy.combination_key,
+                "symbols": extra.get("symbols_passed", 1),
+                "total_trades": r.total_trades,
+                "win_rate": round(r.win_rate, 2),
+                "cagr": round(r.cagr_pct, 2),
+                "sharpe": round(r.sharpe_ratio, 3),
+                "sortino": round(r.sortino_ratio, 3),
+                "max_dd": round(r.max_drawdown_pct, 2),
+                "profit_factor": round(r.profit_factor, 3),
+                "composite": round(r.composite_score, 2),
+                "cv_robustness": extra.get("cv_score", 0),
+            })
+        return out
 
 
 # ========================
