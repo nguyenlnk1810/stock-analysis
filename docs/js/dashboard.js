@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadData() {
     try {
         DATA = window._STOCK_DATA;
+        // Merge AFL data if loaded separately
+        if (window.AFL_SIGNALS && DATA && DATA.rankings) {
+            DATA.rankings.afl_signals = window.AFL_SIGNALS;
+        }
+        if (window.AFL_BACKTEST && DATA && DATA.rankings) {
+            DATA.rankings.afl_backtest = window.AFL_BACKTEST;
+        }
         if (DATA) {
             document.getElementById('loadingScreen').classList.add('hidden');
             const badge = document.getElementById('dataLoadedBadge');
@@ -62,6 +69,7 @@ function switchTab(tabId) {
         'cashflow': 'Dòng tiền',
         'sectors': 'Phân tích ngành',
         'signals': 'Tín hiệu kỹ thuật (100đ)',
+        'afl': 'AFL Signals',
         'watchlist': 'Watchlist',
     };
     document.getElementById('pageTitle').textContent = titles[tabId] || tabId;
@@ -89,6 +97,7 @@ function renderAll() {
     renderSignalsTable();
     renderWatchlist();
     renderBacktestTable();
+    renderAFLSignals();
     updateAIRecommendationBadge();
 }
 
@@ -1239,6 +1248,112 @@ function renderBacktestTable() {
     html += '</div>';
     document.getElementById('btParams').innerHTML = html;
     }); // end loadBacktestData callback
+}
+
+/* ===== AFL SIGNALS ===== */
+let currentAFLFilter = 'afl-all';
+
+function filterAFLSignals(filter) {
+    currentAFLFilter = filter;
+    document.querySelectorAll('.filter-btn[data-filter^="afl-"]').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
+    renderAFLSignals();
+}
+
+function renderAFLSignals() {
+    if (!DATA && !window.AFL_SIGNALS) return;
+
+    // Support both inline and separate data sources
+    let afl, aflBt;
+    if (DATA && DATA.rankings && DATA.rankings.afl_signals) {
+        afl = DATA.rankings.afl_signals;
+        aflBt = DATA.rankings.afl_backtest;
+    } else if (window.AFL_SIGNALS) {
+        afl = window.AFL_SIGNALS;
+        aflBt = window.AFL_BACKTEST;
+    }
+
+    if (!afl) {
+        document.getElementById('aflBuySignals').innerHTML = '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Chưa có dữ liệu AFL. Vui lòng chạy export để cập nhật.</div>';
+        if (document.getElementById('aflStrategyBody')) document.getElementById('aflStrategyBody').innerHTML = '<tr><td colspan="9" class="empty-row">Chưa có dữ liệu</td></tr>';
+        return;
+    }
+
+    // Best strategy
+    const bestStrat = afl.best_strategy || '--';
+    document.getElementById('aflBestStrategy').textContent = bestStrat;
+    document.getElementById('aflBuyCount').textContent = afl.buy_count || 0;
+    document.getElementById('aflSellCount').textContent = afl.sell_count || 0;
+
+    // Win rate from backtest
+    const ranked = (aflBt && aflBt.ranked_strategies) || [];
+    const best = ranked.find(r => r.strategy === bestStrat) || ranked[0] || {};
+    document.getElementById('aflBestWR').textContent = (best.avg_win_rate != null ? best.avg_win_rate.toFixed(1) + '%' : '--');
+
+    // Strategy rankings table
+    const tbody = document.getElementById('aflStrategyBody');
+    if (tbody) {
+        document.getElementById('aflStrategyCount').textContent = ranked.length;
+        if (ranked.length) {
+            tbody.innerHTML = ranked.map((r, i) => {
+                const wrColor = r.avg_win_rate >= 40 ? '#22c55e' : r.avg_win_rate >= 30 ? '#f59e0b' : '#ef4444';
+                const retColor = (r.avg_return || 0) >= 0 ? '#22c55e' : '#ef4444';
+                return `<tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${r.strategy}</strong></td>
+                    <td style="color:${wrColor};font-weight:600">${r.avg_win_rate.toFixed(1)}%</td>
+                    <td style="color:${retColor}">${r.avg_return.toFixed(1)}%</td>
+                    <td>${r.avg_profit_factor.toFixed(2)}</td>
+                    <td style="color:#ef4444">${r.avg_max_dd.toFixed(1)}%</td>
+                    <td>${r.symbols_tested}</td>
+                    <td>${r.total_trades}</td>
+                    <td style="font-weight:700;color:#3b82f6">${r.composite_score.toFixed(1)}</td>
+                </tr>`;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="9" class="empty-row">Chưa có dữ liệu backtest</td></tr>';
+        }
+    }
+
+    // Build buy/sell lists from separate arrays
+    const buys = (afl.buy_signals || []).filter(s => s && s.symbol).slice(0, 10);
+    const sells = (afl.sell_signals || []).filter(s => s && s.symbol).slice(0, 10);
+
+    function renderAFLTable(list, type) {
+        if (!list.length) return '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Không có tín hiệu ' + type + '</div>';
+        return `
+            <div class="table-responsive">
+                <table class="data-table" style="font-size:0.78rem">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Mã</th><th>Tín hiệu</th><th>Giá</th><th>%</th><th>RSI</th><th>RVOL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${list.map((s, i) => {
+                            const sigColor = type === 'MUA' ? '#22c55e' : '#ef4444';
+                            return `<tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
+                                <td>${i + 1}</td>
+                                <td><strong>${s.symbol}</strong></td>
+                                <td style="color:${sigColor};font-weight:600">${type}</td>
+                                <td>${formatNumber(s.price)}</td>
+                                <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
+                                <td>${s.rsi != null ? s.rsi.toFixed(1) : '--'}</td>
+                                <td>${s.volume_ratio != null ? s.volume_ratio.toFixed(1) + 'x' : '--'}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    if (document.getElementById('aflBuySignals')) {
+        document.getElementById('aflBuySignals').innerHTML = renderAFLTable(buys, 'MUA');
+    }
+    if (document.getElementById('aflSellSignals')) {
+        document.getElementById('aflSellSignals').innerHTML = renderAFLTable(sells, 'BÁN');
+    }
 }
 
 /* ===== CLOSE MODAL ON OUTSIDE CLICK ===== */

@@ -22,3 +22,15 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Parquet cache (large binary files)
+*.parquet
+
+# AFL original files
+CodeAmi/
+
+# Temp scripts
+data/download_afl_data.py
+data/run_afl_backtest.py
+data/run_afl_backtest_full.py
+data/patch_afl_signals.py

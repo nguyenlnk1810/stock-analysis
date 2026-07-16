@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 from src.ai_agent import AIStockAgent
+from src.afl_strategies import compute_afl_signals_for_current
 from src.config import config
 
 
@@ -194,8 +195,8 @@ def main():
                 result = agent.analyze_symbol(symbol)
 
                 # Display sections
-                tab1, tab2, tab3, tab4, tab5 = st.tabs(
-                    ["📊 Tổng quan", "📈 Phân tích kỹ thuật", "📰 Tin tức", "🤖 AI Analysis", "🎯 Tín hiệu 100đ"]
+                tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+                    ["📊 Tổng quan", "📈 Phân tích kỹ thuật", "📰 Tin tức", "🤖 AI Analysis", "🎯 Tín hiệu 100đ", "🧪 AFL Signals"]
                 )
 
                 with tab1:
@@ -404,6 +405,47 @@ def main():
                         cols[2].metric("Cách EMA200", f"{ps.get('distance_to_ema200', 0):.1f}%")
                         cols[3].metric("Cách ATH", f"-{ps.get('distance_to_ath', 0):.1f}%")
                         cols[4].metric("Cách 52W H", f"-{ps.get('distance_to_52w_high', 0):.1f}%")
+
+                with tab6:
+                    st.subheader("🧪 AFL Signals - Tín hiệu từ AmiBroker Formulas")
+                    st.caption("Kết hợp 9 chiến lược AFL: PsychIndex, ZangerVolume, RS-VNINDEX, MA20Crossover, ZigZag, Scoring, Ichimoku, MAI, VolumePocket")
+
+                    try:
+                        df = result["price_data"]
+                        if not df.empty:
+                            afl = compute_afl_signals_for_current(df)
+                            col1, col2, col3, col4 = st.columns(4)
+                            sig_color = "green" if afl["current_signal"] == "MUA" else "red" if afl["current_signal"] == "BAN" else "gray"
+                            col1.markdown(f"**Tín hiệu tổng hợp**: :{sig_color}[{afl['current_signal']}]")
+                            col2.metric("MUA", afl["buy_count"])
+                            col3.metric("BÁN", afl["sell_count"])
+                            col4.metric("Sức mạnh", f"{afl['strength']}%")
+
+                            st.divider()
+                            st.subheader("Chi tiết từng chiến lược")
+                            details = afl.get("details", {})
+                            detail_rows = []
+                            for name, d in details.items():
+                                sig_icon = "✅" if d.get("signal") == "MUA" else "❌" if d.get("signal") == "BAN" else "➖"
+                                detail_rows.append({
+                                    "Chiến lược": name,
+                                    "Tín hiệu": f"{sig_icon} {d.get('signal', 'NEUTRAL')}",
+                                })
+                            if detail_rows:
+                                st.dataframe(pd.DataFrame(detail_rows), use_container_width=True, hide_index=True)
+
+                            st.divider()
+                            st.subheader("Lý do MUA")
+                            for r in afl.get("buy_reasons", []):
+                                st.write(f"• {r}")
+
+                            st.subheader("Lý do BÁN")
+                            for r in afl.get("sell_reasons", []):
+                                st.write(f"• {r}")
+                        else:
+                            st.warning("Không có dữ liệu giá để tính AFL signals")
+                    except Exception as e2:
+                        st.warning(f"Không thể tính AFL signals: {e2}")
 
             except Exception as e:
                 st.error(f"❌ Lỗi phân tích {symbol}: {str(e)}")

@@ -1,0 +1,390 @@
+{
+  "SHB": {
+    "avg_volume": 45008400,
+    "market": "HOSE"
+  },
+  "VIX": {
+    "avg_volume": 31917165,
+    "market": "HOSE"
+  },
+  "ACB": {
+    "avg_volume": 20968473,
+    "market": "HOSE"
+  },
+  "VND": {
+    "avg_volume": 16341060,
+    "market": "HOSE"
+  },
+  "HPG": {
+    "avg_volume": 16128716,
+    "market": "HOSE"
+  },
+  "SSI": {
+    "avg_volume": 13889846,
+    "market": "HOSE"
+  },
+  "VPB": {
+    "avg_volume": 13290460,
+    "market": "HOSE"
+  },
+  "SHS": {
+    "avg_volume": 13125291,
+    "market": "HNX"
+  },
+  "GEX": {
+    "avg_volume": 11835004,
+    "market": "HOSE"
+  },
+  "POW": {
+    "avg_volume": 11821121,
+    "market": "HOSE"
+  },
+  "MBB": {
+    "avg_volume": 11779246,
+    "market": "HOSE"
+  },
+  "NVL": {
+    "avg_volume": 11763356,
+    "market": "HOSE"
+  },
+  "TPB": {
+    "avg_volume": 11504030,
+    "market": "HOSE"
+  },
+  "TCB": {
+    "avg_volume": 11380470,
+    "market": "HOSE"
+  },
+  "HDB": {
+    "avg_volume": 10857717,
+    "market": "HOSE"
+  },
+  "CII": {
+    "avg_volume": 9574486,
+    "market": "HOSE"
+  },
+  "BSR": {
+    "avg_volume": 9558578,
+    "market": "HOSE"
+  },
+  "VIB": {
+    "avg_volume": 8989095,
+    "market": "HOSE"
+  },
+  "FPT": {
+    "avg_volume": 8563026,
+    "market": "HOSE"
+  },
+  "DXG": {
+    "avg_volume": 8358769,
+    "market": "HOSE"
+  },
+  "MBS": {
+    "avg_volume": 8107956,
+    "market": "HNX"
+  },
+  "MSB": {
+    "avg_volume": 8104673,
+    "market": "HOSE"
+  },
+  "VCI": {
+    "avg_volume": 7353234,
+    "market": "HOSE"
+  },
+  "CTG": {
+    "avg_volume": 7347926,
+    "market": "HOSE"
+  },
+  "ORS": {
+    "avg_volume": 6575900,
+    "market": "HOSE"
+  },
+  "PDR": {
+    "avg_volume": 6204139,
+    "market": "HOSE"
+  },
+  "VRE": {
+    "avg_volume": 5034708,
+    "market": "HOSE"
+  },
+  "DIG": {
+    "avg_volume": 4817000,
+    "market": "HOSE"
+  },
+  "VHM": {
+    "avg_volume": 4770317,
+    "market": "HOSE"
+  },
+  "HCM": {
+    "avg_volume": 4639682,
+    "market": "HOSE"
+  },
+  "CEO": {
+    "avg_volume": 4577300,
+    "market": "HNX"
+  },
+  "OCB": {
+    "avg_volume": 4468373,
+    "market": "HOSE"
+  },
+  "EIB": {
+    "avg_volume": 4465769,
+    "market": "HOSE"
+  },
+  "VSC": {
+    "avg_volume": 4360360,
+    "market": "HOSE"
+  },
+  "STB": {
+    "avg_volume": 4171086,
+    "market": "HOSE"
+  },
+  "BID": {
+    "avg_volume": 3965904,
+    "market": "HOSE"
+  },
+  "TCH": {
+    "avg_volume": 3902660,
+    "market": "HOSE"
+  },
+  "VCB": {
+    "avg_volume": 3783646,
+    "market": "HOSE"
+  },
+  "PNJ": {
+    "avg_volume": 3728691,
+    "market": "HOSE"
+  },
+  "PVD": {
+    "avg_volume": 3622773,
+    "market": "HOSE"
+  },
+  "VCG": {
+    "avg_volume": 3614117,
+    "market": "HOSE"
+  },
+  "KDH": {
+    "avg_volume": 3605213,
+    "market": "HOSE"
+  },
+  "MWG": {
+    "avg_volume": 3592178,
+    "market": "HOSE"
+  },
+  "KHG": {
+    "avg_volume": 3551986,
+    "market": "HOSE"
+  },
+  "DPM": {
+    "avg_volume": 3397543,
+    "market": "HOSE"
+  },
+  "MSN": {
+    "avg_volume": 3309126,
+    "market": "HOSE"
+  },
+  "VIC": {
+    "avg_volume": 3294782,
+    "market": "HOSE"
+  },
+  "HHV": {
+    "avg_volume": 2951843,
+    "market": "HOSE"
+  },
+  "VNM": {
+    "avg_volume": 2921473,
+    "market": "HOSE"
+  },
+  "HSG": {
+    "avg_volume": 2826565,
+    "market": "HOSE"
+  },
+  "PVT": {
+    "avg_volume": 2759421,
+    "market": "HOSE"
+  },
+  "CTS": {
+    "avg_volume": 2736830,
+    "market": "HOSE"
+  },
+  "LPB": {
+    "avg_volume": 2699313,
+    "market": "HOSE"
+  },
+  "EVF": {
+    "avg_volume": 2676421,
+    "market": "HOSE"
+  },
+  "NAB": {
+    "avg_volume": 2588295,
+    "market": "HOSE"
+  },
+  "DCM": {
+    "avg_volume": 2458108,
+    "market": "HOSE"
+  },
+  "HAG": {
+    "avg_volume": 2444334,
+    "market": "HOSE"
+  },
+  "PVS": {
+    "avg_volume": 2355595,
+    "market": "HNX"
+  },
+  "SSB": {
+    "avg_volume": 2324500,
+    "market": "HOSE"
+  },
+  "NLG": {
+    "avg_volume": 2162626,
+    "market": "HOSE"
+  },
+  "HQC": {
+    "avg_volume": 2159517,
+    "market": "HOSE"
+  },
+  "FTS": {
+    "avg_volume": 2142965,
+    "market": "HOSE"
+  },
+  "PLX": {
+    "avg_volume": 1997008,
+    "market": "HOSE"
+  },
+  "HDG": {
+    "avg_volume": 1957986,
+    "market": "HOSE"
+  },
+  "VDS": {
+    "avg_volume": 1859617,
+    "market": "HOSE"
+  },
+  "GVR": {
+    "avg_volume": 1751217,
+    "market": "HOSE"
+  },
+  "HVN": {
+    "avg_volume": 1580391,
+    "market": "HOSE"
+  },
+  "KBC": {
+    "avg_volume": 1468443,
+    "market": "HOSE"
+  },
+  "NKG": {
+    "avg_volume": 1393939,
+    "market": "HOSE"
+  },
+  "SCR": {
+    "avg_volume": 1390452,
+    "market": "HOSE"
+  },
+  "BAF": {
+    "avg_volume": 1330265,
+    "market": "HOSE"
+  },
+  "DBC": {
+    "avg_volume": 1325391,
+    "market": "HOSE"
+  },
+  "GEE": {
+    "avg_volume": 1304056,
+    "market": "HOSE"
+  },
+  "DXS": {
+    "avg_volume": 1268447,
+    "market": "HOSE"
+  },
+  "HDC": {
+    "avg_volume": 1250573,
+    "market": "HOSE"
+  },
+  "MST": {
+    "avg_volume": 1236473,
+    "market": "HNX"
+  },
+  "GMD": {
+    "avg_volume": 1178469,
+    "market": "HOSE"
+  },
+  "NRC": {
+    "avg_volume": 1169482,
+    "market": "HNX"
+  },
+  "LDG": {
+    "avg_volume": 1142826,
+    "market": "HOSE"
+  },
+  "GAS": {
+    "avg_volume": 1074817,
+    "market": "HOSE"
+  },
+  "BVS": {
+    "avg_volume": 1063773,
+    "market": "HNX"
+  },
+  "VPI": {
+    "avg_volume": 1055717,
+    "market": "HOSE"
+  },
+  "IDC": {
+    "avg_volume": 1047226,
+    "market": "HNX"
+  },
+  "HHS": {
+    "avg_volume": 1034004,
+    "market": "HOSE"
+  },
+  "YEG": {
+    "avg_volume": 1016791,
+    "market": "HOSE"
+  },
+  "HUT": {
+    "avg_volume": 1006643,
+    "market": "HNX"
+  },
+  "IJC": {
+    "avg_volume": 990630,
+    "market": "HOSE"
+  },
+  "AAA": {
+    "avg_volume": 946973,
+    "market": "HOSE"
+  },
+  "VJC": {
+    "avg_volume": 936634,
+    "market": "HOSE"
+  },
+  "VTZ": {
+    "avg_volume": 912547,
+    "market": "HNX"
+  },
+  "BSI": {
+    "avg_volume": 898130,
+    "market": "HOSE"
+  },
+  "TCM": {
+    "avg_volume": 896739,
+    "market": "HOSE"
+  },
+  "TVC": {
+    "avg_volume": 878786,
+    "market": "HNX"
+  },
+  "AGR": {
+    "avg_volume": 858856,
+    "market": "HOSE"
+  },
+  "DLG": {
+    "avg_volume": 840786,
+    "market": "HOSE"
+  },
+  "VFS": {
+    "avg_volume": 833021,
+    "market": "HNX"
+  },
+  "HSL": {
+    "avg_volume": 817986,
+    "market": "HOSE"
+  }
+}

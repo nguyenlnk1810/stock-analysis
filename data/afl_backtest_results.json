@@ -1,0 +1,420 @@
+{
+  "generated_at": "2026-07-16T14:34:06.396907",
+  "best_strategy": "VolumePocket",
+  "best_win_rate": 40.74,
+  "ranked_strategies": [
+    {
+      "strategy": "VolumePocket",
+      "avg_win_rate": 40.74,
+      "avg_return": 9.16,
+      "avg_profit_factor": 1.35,
+      "avg_max_dd": 33.7,
+      "consistency": 9.3,
+      "symbols_tested": 39,
+      "total_trades": 933,
+      "composite_score": 22.41
+    },
+    {
+      "strategy": "PsychIndex",
+      "avg_win_rate": 37.72,
+      "avg_return": 2.49,
+      "avg_profit_factor": 1.56,
+      "avg_max_dd": 20.53,
+      "consistency": 19.65,
+      "symbols_tested": 36,
+      "total_trades": 326,
+      "composite_score": 20.14
+    },
+    {
+      "strategy": "RSVNINDEX",
+      "avg_win_rate": 39.56,
+      "avg_return": -0.11,
+      "avg_profit_factor": 1.15,
+      "avg_max_dd": 47.31,
+      "consistency": 7.43,
+      "symbols_tested": 39,
+      "total_trades": 1224,
+      "composite_score": 18.2
+    },
+    {
+      "strategy": "ZangerVolume",
+      "avg_win_rate": 36.87,
+      "avg_return": 0.33,
+      "avg_profit_factor": 1.12,
+      "avg_max_dd": 36.08,
+      "consistency": 9.93,
+      "symbols_tested": 39,
+      "total_trades": 830,
+      "composite_score": 17.65
+    },
+    {
+      "strategy": "Scoring",
+      "avg_win_rate": 32.94,
+      "avg_return": 0.92,
+      "avg_profit_factor": 1.43,
+      "avg_max_dd": 26.03,
+      "consistency": 11.23,
+      "symbols_tested": 39,
+      "total_trades": 937,
+      "composite_score": 17.28
+    },
+    {
+      "strategy": "MAI",
+      "avg_win_rate": 36.24,
+      "avg_return": -6.32,
+      "avg_profit_factor": 0.98,
+      "avg_max_dd": 21.18,
+      "consistency": 16.67,
+      "symbols_tested": 36,
+      "total_trades": 251,
+      "composite_score": 15.71
+    },
+    {
+      "strategy": "Ichimoku",
+      "avg_win_rate": 36.56,
+      "avg_return": -12.91,
+      "avg_profit_factor": 0.75,
+      "avg_max_dd": 22.89,
+      "consistency": 8.29,
+      "symbols_tested": 11,
+      "total_trades": 60,
+      "composite_score": 13.33
+    },
+    {
+      "strategy": "MA20Crossover",
+      "avg_win_rate": 26.06,
+      "avg_return": -10.57,
+      "avg_profit_factor": 0.93,
+      "avg_max_dd": 18.67,
+      "consistency": 16.22,
+      "symbols_tested": 19,
+      "total_trades": 109,
+      "composite_score": 10.36
+    }
+  ],
+  "current_signals": {
+    "ACB": {
+      "symbol": "ACB",
+      "signal": "BAN",
+      "price": 22550.0,
+      "change_pct": -1.1,
+      "rsi": 43.6,
+      "volume_ratio": 0.6
+    },
+    "BID": {
+      "symbol": "BID",
+      "signal": "BAN",
+      "price": 39650.0,
+      "change_pct": 0.38,
+      "rsi": 28.4,
+      "volume_ratio": 1.07
+    },
+    "BSR": {
+      "symbol": "BSR",
+      "signal": "BAN",
+      "price": 25450.0,
+      "change_pct": -3.23,
+      "rsi": 48.1,
+      "volume_ratio": 0.73
+    },
+    "CEO": {
+      "symbol": "CEO",
+      "signal": "BAN",
+      "price": 13800.0,
+      "change_pct": 0.0,
+      "rsi": 34.2,
+      "volume_ratio": 0.0
+    },
+    "CII": {
+      "symbol": "CII",
+      "signal": "BAN",
+      "price": 15800.0,
+      "change_pct": 0.0,
+      "rsi": 28.8,
+      "volume_ratio": 1.12
+    },
+    "CTG": {
+      "symbol": "CTG",
+      "signal": "BAN",
+      "price": 31950.0,
+      "change_pct": -0.62,
+      "rsi": 16.7,
+      "volume_ratio": 1.17
+    },
+    "DIG": {
+      "symbol": "DIG",
+      "signal": "BAN",
+      "price": 12400.0,
+      "change_pct": 3.33,
+      "rsi": 50.7,
+      "volume_ratio": 1.72
+    },
+    "DXG": {
+      "symbol": "DXG",
+      "signal": "BAN",
+      "price": 12100.0,
+      "change_pct": -0.82,
+      "rsi": 40.3,
+      "volume_ratio": 1.04
+    },
+    "EIB": {
+      "symbol": "EIB",
+      "signal": "BAN",
+      "price": 19050.0,
+      "change_pct": -2.06,
+      "rsi": 20.5,
+      "volume_ratio": 1.61
+    },
+    "FPT": {
+      "symbol": "FPT",
+      "signal": "BAN",
+      "price": 70600.0,
+      "change_pct": -2.08,
+      "rsi": 35.0,
+      "volume_ratio": 1.04
+    },
+    "GEX": {
+      "symbol": "GEX",
+      "signal": "BAN",
+      "price": 24300.0,
+      "change_pct": -4.52,
+      "rsi": 17.5,
+      "volume_ratio": 0.71
+    },
+    "HCM": {
+      "symbol": "HCM",
+      "signal": "BAN",
+      "price": 24750.0,
+      "change_pct": -8.33,
+      "rsi": 18.7,
+      "volume_ratio": 1.53
+    },
+    "HDB": {
+      "symbol": "HDB",
+      "signal": "BAN",
+      "price": 26700.0,
+      "change_pct": 1.33,
+      "rsi": 51.5,
+      "volume_ratio": 0.87
+    },
+    "HPG": {
+      "symbol": "HPG",
+      "signal": "BAN",
+      "price": 22950.0,
+      "change_pct": -1.08,
+      "rsi": 30.6,
+      "volume_ratio": 0.7
+    },
+    "MBB": {
+      "symbol": "MBB",
+      "signal": "BAN",
+      "price": 24650.0,
+      "change_pct": 0.2,
+      "rsi": 37.5,
+      "volume_ratio": 0.85
+    },
+    "MBS": {
+      "symbol": "MBS",
+      "signal": "BAN",
+      "price": 20300.0,
+      "change_pct": -0.98,
+      "rsi": 40.2,
+      "volume_ratio": 0.0
+    },
+    "MSB": {
+      "symbol": "MSB",
+      "signal": "MUA",
+      "price": 16400.0,
+      "change_pct": 0.61,
+      "rsi": 69.5,
+      "volume_ratio": 0.89
+    },
+    "NVL": {
+      "symbol": "NVL",
+      "signal": "BAN",
+      "price": 12200.0,
+      "change_pct": 2.95,
+      "rsi": 42.8,
+      "volume_ratio": 1.17
+    },
+    "OCB": {
+      "symbol": "OCB",
+      "signal": "MUA",
+      "price": 10900.0,
+      "change_pct": 1.4,
+      "rsi": 33.7,
+      "volume_ratio": 0.45
+    },
+    "ORS": {
+      "symbol": "ORS",
+      "signal": "BAN",
+      "price": 14000.0,
+      "change_pct": 2.19,
+      "rsi": 54.1,
+      "volume_ratio": 0.56
+    },
+    "PDR": {
+      "symbol": "PDR",
+      "signal": "BAN",
+      "price": 13400.0,
+      "change_pct": -2.19,
+      "rsi": 14.3,
+      "volume_ratio": 1.33
+    },
+    "PNJ": {
+      "symbol": "PNJ",
+      "signal": "BAN",
+      "price": 41500.0,
+      "change_pct": -4.93,
+      "rsi": 18.3,
+      "volume_ratio": 3.11
+    },
+    "POW": {
+      "symbol": "POW",
+      "signal": "BAN",
+      "price": 13550.0,
+      "change_pct": -2.52,
+      "rsi": 28.1,
+      "volume_ratio": 0.57
+    },
+    "SHB": {
+      "symbol": "SHB",
+      "signal": "BAN",
+      "price": 12550.0,
+      "change_pct": -0.4,
+      "rsi": 20.2,
+      "volume_ratio": 0.48
+    },
+    "SHS": {
+      "symbol": "SHS",
+      "signal": "BAN",
+      "price": 16200.0,
+      "change_pct": -3.57,
+      "rsi": 19.8,
+      "volume_ratio": 0.0
+    },
+    "SSI": {
+      "symbol": "SSI",
+      "signal": "BAN",
+      "price": 26550.0,
+      "change_pct": -1.48,
+      "rsi": 39.4,
+      "volume_ratio": 1.04
+    },
+    "STB": {
+      "symbol": "STB",
+      "signal": "MUA",
+      "price": 71700.0,
+      "change_pct": 2.72,
+      "rsi": 55.6,
+      "volume_ratio": 1.39
+    },
+    "T": {
+      "symbol": "T",
+      "signal": "NEUTRAL",
+      "price": 5389806560.0,
+      "change_pct": 0.0,
+      "rsi": 0.0,
+      "volume_ratio": 0.0
+    },
+    "TCB": {
+      "symbol": "TCB",
+      "signal": "BAN",
+      "price": 32400.0,
+      "change_pct": -2.26,
+      "rsi": 36.1,
+      "volume_ratio": 1.24
+    },
+    "TCH": {
+      "symbol": "TCH",
+      "signal": "MUA",
+      "price": 13800.0,
+      "change_pct": -0.72,
+      "rsi": 40.7,
+      "volume_ratio": 1.57
+    },
+    "TPB": {
+      "symbol": "TPB",
+      "signal": "BAN",
+      "price": 15100.0,
+      "change_pct": -1.31,
+      "rsi": 17.2,
+      "volume_ratio": 0.9
+    },
+    "VCB": {
+      "symbol": "VCB",
+      "signal": "BAN",
+      "price": 60500.0,
+      "change_pct": -0.98,
+      "rsi": 32.9,
+      "volume_ratio": 0.8
+    },
+    "VCI": {
+      "symbol": "VCI",
+      "signal": "BAN",
+      "price": 21900.0,
+      "change_pct": -2.23,
+      "rsi": 19.3,
+      "volume_ratio": 1.65
+    },
+    "VHM": {
+      "symbol": "VHM",
+      "signal": "BAN",
+      "price": 140100.0,
+      "change_pct": 3.01,
+      "rsi": 36.5,
+      "volume_ratio": 0.68
+    },
+    "VIB": {
+      "symbol": "VIB",
+      "signal": "BAN",
+      "price": 15450.0,
+      "change_pct": 0.0,
+      "rsi": 29.8,
+      "volume_ratio": 0.7
+    },
+    "VIX": {
+      "symbol": "VIX",
+      "signal": "BAN",
+      "price": 13500.0,
+      "change_pct": -3.23,
+      "rsi": 10.1,
+      "volume_ratio": 1.0
+    },
+    "VND": {
+      "symbol": "VND",
+      "signal": "BAN",
+      "price": 16800.0,
+      "change_pct": -2.61,
+      "rsi": 28.0,
+      "volume_ratio": 0.89
+    },
+    "VPB": {
+      "symbol": "VPB",
+      "signal": "BAN",
+      "price": 25200.0,
+      "change_pct": -2.33,
+      "rsi": 19.9,
+      "volume_ratio": 1.06
+    },
+    "VRE": {
+      "symbol": "VRE",
+      "signal": "BAN",
+      "price": 24950.0,
+      "change_pct": 0.6,
+      "rsi": 16.4,
+      "volume_ratio": 0.94
+    },
+    "VSC": {
+      "symbol": "VSC",
+      "signal": "BAN",
+      "price": 15250.0,
+      "change_pct": 1.67,
+      "rsi": 21.6,
+      "volume_ratio": 1.44
+    }
+  },
+  "total_symbols_tested": 40,
+  "buy_count": 4,
+  "sell_count": 35
+}

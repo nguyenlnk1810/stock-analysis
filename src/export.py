@@ -9,6 +9,7 @@ from src.ssi_client import SSIClient
 from src.ai_agent import AIStockAgent
 from src.market_sentiment import GreedFearIndex
 from src.signal_scoring import SignalScorer, compute_smart_money_patterns, compute_position_score
+from src.afl_strategies import compute_afl_signals_for_current, run_all_afl_backtests, backtest_afl_strategy
 from src.config import config
 
 
@@ -425,6 +426,56 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         rankings["top_10_tin_hieu_mua"] = buy_signals[:10]
         rankings["top_10_suy_yeu"] = weak_stocks[:10]
         rankings["canh_bao"] = warnings[:20]
+
+        # AFL signals
+        try:
+            afl_results_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "afl_backtest_results.json")
+            afl_backtest_data = {"best_strategy": "MAI", "ranked_strategies": []}
+            if os.path.exists(afl_results_path):
+                with open(afl_results_path, "r") as f:
+                    afl_backtest_data = json.load(f)
+            rankings["afl_backtest"] = afl_backtest_data
+
+            # Compute AFL signals for each stock
+            afl_signals_list = {"MUA": [], "BAN": [], "NEUTRAL": []}
+            best_afl_strat = afl_backtest_data.get("best_strategy", "MAI")
+
+            for sym, s in stock_data.items():
+                if s.get("error"):
+                    continue
+                tech = s.get("technical", {})
+                ind = tech.get("indicators", {})
+                price = ind.get("current_price", 0)
+                change = ind.get("price_change_pct_1d", 0)
+                rsi = ind.get("rsi_14", 50)
+                vol_ratio = ind.get("volume_ratio", 1)
+                mfi = ind.get("mfi", 50)
+                afl_signal = s.get("afl_signal", "NEUTRAL")
+
+                item = {
+                    "symbol": sym,
+                    "signal": afl_signal,
+                    "price": price,
+                    "change_pct": change,
+                    "rsi": rsi,
+                    "volume_ratio": round(vol_ratio, 2),
+                    "mfi": mfi,
+                }
+                afl_signals_list.get(afl_signal, afl_signals_list["NEUTRAL"]).append(item)
+
+            for key in afl_signals_list:
+                afl_signals_list[key].sort(key=lambda x: abs(x.get("change_pct", 0)), reverse=True)
+
+            rankings["afl_signals"] = {
+                "best_strategy": best_afl_strat,
+                "buy_signals": afl_signals_list["MUA"][:10],
+                "sell_signals": afl_signals_list["BAN"][:10],
+                "neutral_signals": afl_signals_list["NEUTRAL"][:5],
+                "buy_count": len(afl_signals_list["MUA"]),
+                "sell_count": len(afl_signals_list["BAN"]),
+            }
+        except Exception as e:
+            rankings["afl_signals"] = {"error": str(e)[:100], "buy_signals": [], "sell_signals": []}
 
         # Summary stats
         if scored_stocks:
