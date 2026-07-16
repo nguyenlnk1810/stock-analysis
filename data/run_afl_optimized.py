@@ -457,17 +457,23 @@ print(f"\n=== TOP 10 BAN ===")
 for s in sells_sorted:
     print(f"  {s['symbol']} ({s['strength']:.0f}%) @ {s['price']:.0f} ({s['change_pct']:+.2f}%) RSI={s['rsi']} RVOL={s['volume_ratio']}")
 
-# Build output
+# Build output with backward-compatible ranked_strategies for dashboard
+ranked_strategies = [
+    {"strategy": r[0], "type": r[7], "avg_win_rate": r[1], "avg_return": r[2], "avg_profit_factor": r[3],
+     "avg_max_dd": r[4], "symbols_tested": r[5], "total_trades": r[6],
+     "composite_score": r[7] if len(r) > 7 and isinstance(r[7], (int, float)) else r[8] if len(r) > 8 else 0}
+    for r in all_ranked[:30]
+]
+
 output = {
     "generated_at": datetime.now().isoformat(),
     "backtest_period": "2024-01-01 to 2025-12-31",
     "symbols_tested": len(symbols),
+    "best_strategy": best_methods[0][0] if best_methods else "VolumePocket",
+    "best_win_rate": best_methods[0][2] if best_methods else 0,
     "best_methods": [{"name": m[0], "type": m[1], "win_rate": m[2], "composite_score": m[3]} for m in best_methods],
-    "all_ranked_methods": [
-        {"name": r[0], "type": r[7], "win_rate": r[1], "avg_return": r[2], "profit_factor": r[3],
-         "max_dd": r[4], "symbols_tested": r[5], "total_trades": r[6], "composite_score": r[7] if len(r)>7 else 0}
-        for r in all_ranked[:30]
-    ],
+    "ranked_strategies": ranked_strategies,
+    "all_ranked_methods": ranked_strategies,
     "buy_signals": buys_sorted,
     "sell_signals": sells_sorted,
     "buy_count": len(buys_sorted),
