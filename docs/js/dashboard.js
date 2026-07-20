@@ -29,6 +29,7 @@ function loadAFL() {
 function fetchStockData() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'data/stock_data.json?_=' + Date.now(), true);
+    xhr.timeout = 15000; // 15s timeout
     xhr.onload = function() {
         if (xhr.status === 200) {
             try {
@@ -47,11 +48,15 @@ function fetchStockData() {
                 console.error('JSON parse error:', e);
             }
         }
-        // Retry on failure
-        setTimeout(fetchStockData, 1000);
+        setTimeout(fetchStockData, 2000);
     };
     xhr.onerror = function() {
-        setTimeout(fetchStockData, 1000);
+        console.error('XHR error: cannot fetch data/stock_data.json');
+        setTimeout(fetchStockData, 2000);
+    };
+    xhr.ontimeout = function() {
+        console.error('XHR timeout: data/stock_data.json took too long');
+        setTimeout(fetchStockData, 2000);
     };
     xhr.send();
 }
