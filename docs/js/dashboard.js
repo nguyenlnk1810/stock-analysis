@@ -29,10 +29,13 @@ function loadData() {
         if (DATA) {
             hideLoading();
             renderAll();
-        } else if (++_loadAttempts < 40) {
-            setTimeout(loadData, 250);
         } else {
-            showError('Không thể tải dữ liệu', '_STOCK_DATA=' + typeof window._STOCK_DATA + ' AFL_SIGNALS=' + typeof window.AFL_SIGNALS);
+            _loadAttempts++;
+            if (_loadAttempts < 200) {
+                setTimeout(loadData, 250);
+            } else {
+                showError('Không thể tải dữ liệu', 'Đã thử 200 lần (50s). _STOCK_DATA=' + typeof window._STOCK_DATA + ' AFL_SIGNALS=' + typeof window.AFL_SIGNALS);
+            }
         }
     } catch (e) {
         console.error('Load error:', e);
