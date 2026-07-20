@@ -185,15 +185,121 @@ def compute_current_signal(signals_dict, method_name, close):
 
     last_idx = min(len(sig) - 1, len(close) - 1)
     if last_idx < 60:
-        return "NEUTRAL", 0
+        return "NEUTRAL", 0, None
 
-    # Check last 3 bars for signal
+    # Find the most recent signal bar
+    signal_bar = None
     for i in range(last_idx, max(60, last_idx - 5) - 1, -1):
         if sig[i] == 1:
-            return "MUA", 1.0
+            signal_bar = i
+            return "MUA", 1.0, signal_bar
         if sig[i] == -1:
-            return "BAN", -1.0
-    return "NEUTRAL", 0
+            signal_bar = i
+            return "BAN", -1.0, signal_bar
+    return "NEUTRAL", 0, None
+
+def compute_indicator_values(df, index_df=None):
+    """Return current indicator values for all strategies for explanation."""
+    vals = {}
+    close = df["close"].values
+    vol = df["volume"].values
+    high = df["high"].values
+    low = df["low"].values
+
+    try:
+        psych = PsychIndexStrategy(df, lookback=12, oversold=25, overbought=75)
+        pv, _ = psych.compute()
+        vals["PsychIndex"] = round(float(pv[-1]), 1) if not np.isnan(pv[-1]) else None
+    except: pass
+    try:
+        mai = MAIStrategy(df)
+        mv, _ = mai.compute()
+        vals["MAI"] = round(float(mv[-1]), 1) if not np.isnan(mv[-1]) else None
+    except: pass
+    try:
+        rsv = RSVNINDEXStrategy(df, index_df)
+        rv, _ = rsv.compute()
+        vals["RSVNINDEX"] = round(float(rv[-1]), 1) if rv is not None and not np.isnan(rv[-1]) else None
+    except: pass
+    try:
+        sc = ScoringStrategy(df, index_df)
+        sv, _ = sc.compute()
+        vals["Scoring"] = round(float(sv[-1]), 1) if sv is not None and not np.isnan(sv[-1]) else None
+    except: pass
+    try:
+        zp = ZangerVolumeStrategy(df)
+        zv, _ = zp.compute()
+        vals["ZangerVolume"] = round(float(zv[-1]), 1) if zv is not None and not np.isnan(zv[-1]) else None
+    except: pass
+    try:
+        vp = VolumePocketStrategy(df)
+        vpv, vp_sig = vp.compute()
+        vals["VolumePocket"] = "triggered" if abs(vp_sig[-1]) > 0 else "none"
+    except: pass
+
+    # RSI, ATR for TP/SL
+    close_s = pd.Series(close)
+    diff = close_s.diff()
+    gain = diff.clip(lower=0).ewm(span=14).mean()
+    loss = (-diff.clip(upper=0)).ewm(span=14).mean()
+    rs = gain / (loss + 1e-10)
+    vals["RSI"] = round(float(100 - 100 / (1 + rs.iloc[-1])), 1) if not pd.isna(rs.iloc[-1]) else 50
+
+    tr = np.maximum(high - low, np.maximum(abs(high - np.roll(close, 1)), abs(low - np.roll(close, 1))))
+    tr[0] = tr[1] if len(tr) > 1 else 0
+    atr = pd.Series(tr).ewm(span=14, adjust=False).mean().values[-1]
+    vals["ATR"] = round(float(atr), 0)
+
+    return vals, atr
+
+def compute_signal_reasons(method_names, indicator_vals, df):
+    """Generate human-readable reasons for why a signal was triggered."""
+    reasons = []
+    price = float(df["close"].iloc[-1])
+    high = float(df["high"].iloc[-1])
+    low = float(df["low"].iloc[-1])
+
+    if isinstance(method_names, str):
+        method_names = [method_names]
+    for m in method_names:
+        r = compute_signal_reasons_single(m, indicator_vals, price)
+        if r:
+            reasons.extend(r)
+    return reasons[:5]
+
+def compute_signal_reasons_single(name, iv, price):
+    r = []
+    if name == "PsychIndex":
+        v = iv.get("PsychIndex")
+        if v is not None:
+            r.append(f"PsychIndex={v} (quá bán <25 → MUA, quá mua >75 → BÁN)")
+    elif name == "MAI":
+        v = iv.get("MAI")
+        if v is not None:
+            r.append(f"MA Impulse={v} (vượt ngưỡng ±5)")
+    elif name == "RSVNINDEX":
+        v = iv.get("RSVNINDEX")
+        if v is not None:
+            r.append(f"RS so VNINDEX={v} (mạnh hơn VNINDEX → MUA)")
+    elif name == "ZangerVolume":
+        v = iv.get("ZangerVolume")
+        if v is not None:
+            r.append(f"Volume Ratio={v}x TB20")
+    elif name == "Scoring":
+        v = iv.get("Scoring")
+        if v is not None:
+            r.append(f"Composite Score={v}")
+    elif name == "VolumePocket":
+        r.append("Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20")
+    elif name == "MA20Crossover":
+        r.append("MA15 cắt lên MA30 + Volume > SMA20×1.2 → MUA")
+    elif name == "Ichimoku":
+        r.append("Ichimoku cloud: giá trên mây + đường chuyển đổi > đường cơ sở")
+    elif name == "ZigZag":
+        r.append("ZigZag: đáy sau cao hơn đáy trước + phá vỡ 6%")
+    if not r:
+        r.append(f"{name}: tín hiệu phát sinh")
+    return r
 
 # ============================================================
 print("=" * 70)
@@ -370,13 +476,13 @@ print(f"\n\n=== TOP {len(best_methods)} BEST SIGNAL METHODS ===")
 for i, (name, typ, wr, score) in enumerate(best_methods):
     print(f"{i+1}. {name} ({typ}) - WR={wr:.1f}%, Score={score:.1f}")
 
-# Phase 3: Current signals using best methods
-print("\n\n=== Phase 3: Current Signals ===")
+# Phase 3: Current signals using best methods + TP/SL + reasons + history
+print("\n\n=== Phase 3: Current Signals + TP/SL + Reasons + History ===")
 print(f"Using top {len(best_methods)} methods: {[m[0] for m in best_methods]}")
 
 all_buy_signals = {}
 all_sell_signals = {}
-method_votes = {}
+all_signal_history = {}
 
 for sym in symbols:
     path = os.path.join(cache_dir, f"{sym}.parquet")
@@ -387,24 +493,32 @@ for sym in symbols:
     df = df.sort_values("date").reset_index(drop=True)
     df["date"] = pd.to_datetime(df["date"])
     close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
 
     signals_dict = compute_all_signals(df)
+    indicator_vals, atr = compute_indicator_values(df)
     mua_votes = 0
     ban_votes = 0
     details = {}
+    signal_bar_idx = None
 
     for method_name, typ, wr, score in best_methods:
         if typ == "combo":
             combo_names = tuple(method_name.split("+"))
-            sig_type, strength = compute_current_signal(signals_dict, combo_names, close)
+            sig_type, strength, sbar = compute_current_signal(signals_dict, combo_names, close)
         else:
-            sig_type, strength = compute_current_signal(signals_dict, method_name, close)
+            sig_type, strength, sbar = compute_current_signal(signals_dict, method_name, close)
 
         details[method_name] = sig_type
         if sig_type == "MUA":
             mua_votes += 1
+            if signal_bar_idx is None or (sbar is not None and sbar < signal_bar_idx):
+                signal_bar_idx = sbar
         elif sig_type == "BAN":
             ban_votes += 1
+            if signal_bar_idx is None or (sbar is not None and sbar < signal_bar_idx):
+                signal_bar_idx = sbar
 
     # Overall signal: majority vote of best methods
     if mua_votes > ban_votes and mua_votes >= len(best_methods) * 0.4:
@@ -417,17 +531,66 @@ for sym in symbols:
         final_signal = "NEUTRAL"
         strength_pct = 0
 
-    current_price = float(df["close"].iloc[-1])
-    prev_close = float(df["close"].iloc[-2]) if len(df) >= 2 else current_price
+    current_price = float(close[-1])
+    prev_close = float(close[-2]) if len(df) >= 2 else current_price
     change_pct = round((current_price - prev_close) / prev_close * 100, 2) if prev_close > 0 else 0
 
-    close_series = df["close"]
+    close_series = pd.Series(close)
     diff = close_series.diff()
     gain = diff.clip(lower=0).ewm(span=14).mean()
     loss = (-diff.clip(upper=0)).ewm(span=14).mean()
     rs = gain / (loss + 1e-10)
     rsi_val = round(float(100 - 100 / (1 + rs.iloc[-1])), 1) if not pd.isna(rs.iloc[-1]) else 50
     vol_ratio = float(df["volume"].iloc[-1]) / max(float(df["volume"].tail(20).mean()), 1)
+
+    # Compute TP/SL levels
+    atr_val = max(float(atr), current_price * 0.005)  # Minimum ATR = 0.5% of price
+    if final_signal == "MUA":
+        stop_loss = round(current_price - 2.0 * atr_val, 0)
+        take_profit_1 = round(current_price + 2.0 * atr_val, 0)
+        take_profit_2 = round(current_price + 3.0 * atr_val, 0)
+        rrr = round((take_profit_1 - current_price) / (current_price - stop_loss + 1), 2) if stop_loss > 0 else 0
+    elif final_signal == "BAN":
+        stop_loss = round(current_price + 2.0 * atr_val, 0)
+        take_profit_1 = round(current_price - 2.0 * atr_val, 0)
+        take_profit_2 = round(current_price - 3.0 * atr_val, 0)
+        rrr = round((current_price - take_profit_1) / (stop_loss - current_price + 1), 2) if take_profit_1 > 0 else 0
+    else:
+        stop_loss = 0
+        take_profit_1 = 0
+        take_profit_2 = 0
+        rrr = 0
+
+    # Compute signal date (most recent signal bar)
+    signal_date = ""
+    if signal_bar_idx is not None and signal_bar_idx < len(df):
+        signal_date = str(df["date"].iloc[signal_bar_idx]).split()[0]
+
+    # Compute reasons
+    all_method_names = []
+    for m in best_methods:
+        if m[1] == "combo":
+            all_method_names.extend(m[0].split("+"))
+        else:
+            all_method_names.append(m[0])
+    reasons = compute_signal_reasons(all_method_names, indicator_vals, df) if final_signal != "NEUTRAL" else []
+
+    # Compute signal history from backtest trades
+    try:
+        result = backtest_afl_strategy(df, "VolumePocket")
+        all_trades = result.get("trades", [])
+        recent_trades = []
+        for t in all_trades[-20:]:
+            recent_trades.append({
+                "entry_date": t["entry_date"],
+                "exit_date": t["exit_date"],
+                "pnl_pct": t["pnl_pct"],
+                "exit_reason": t["exit_reason"],
+                "bars_held": t["bars_held"],
+            })
+        signal_history = recent_trades[-10:]
+    except Exception:
+        signal_history = []
 
     signal_entry = {
         "symbol": sym,
@@ -438,6 +601,14 @@ for sym in symbols:
         "volume_ratio": round(vol_ratio, 2),
         "strength": round(strength_pct, 0) if strength_pct > 0 else 0,
         "details": details,
+        "stop_loss": stop_loss,
+        "take_profit_1": take_profit_1,
+        "take_profit_2": take_profit_2,
+        "rrr": rrr,
+        "atr": round(atr_val, 0),
+        "signal_date": signal_date,
+        "reasons": reasons[:5],
+        "signal_history": signal_history,
     }
 
     if final_signal == "MUA":
@@ -451,11 +622,19 @@ sells_sorted = sorted(all_sell_signals.values(), key=lambda x: x["strength"], re
 
 print(f"\n=== TOP 10 MUA ===")
 for s in buys_sorted:
-    print(f"  {s['symbol']} ({s['strength']:.0f}%) @ {s['price']:.0f} ({s['change_pct']:+.2f}%) RSI={s['rsi']} RVOL={s['volume_ratio']}")
+    print(f"  {s['symbol']} ({s['strength']:.0f}%) @ {s['price']:.0f} ({s['change_pct']:+.2f}%)")
+    print(f"    SL={s['stop_loss']:.0f} TP1={s['take_profit_1']:.0f} TP2={s['take_profit_2']:.0f} R:R={s['rrr']}")
+    print(f"    Signal: {s['signal_date']} | ATR={s['atr']:.0f}")
+    for r in s['reasons']:
+        print(f"    -> {r}")
 
 print(f"\n=== TOP 10 BAN ===")
 for s in sells_sorted:
-    print(f"  {s['symbol']} ({s['strength']:.0f}%) @ {s['price']:.0f} ({s['change_pct']:+.2f}%) RSI={s['rsi']} RVOL={s['volume_ratio']}")
+    print(f"  {s['symbol']} ({s['strength']:.0f}%) @ {s['price']:.0f} ({s['change_pct']:+.2f}%)")
+    print(f"    SL={s['stop_loss']:.0f} TP1={s['take_profit_1']:.0f} TP2={s['take_profit_2']:.0f} R:R={s['rrr']}")
+    print(f"    Signal: {s['signal_date']} | ATR={s['atr']:.0f}")
+    for r in s['reasons']:
+        print(f"    -> {r}")
 
 # Build output with backward-compatible ranked_strategies for dashboard
 ranked_strategies = [

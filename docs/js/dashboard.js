@@ -1323,27 +1323,87 @@ function renderAFLSignals() {
         if (!list.length) return '<div class="signal-placeholder" style="padding:40px;text-align:center;color:#667788">Không có tín hiệu ' + type + '</div>';
         return `
             <div class="table-responsive">
-                <table class="data-table" style="font-size:0.78rem">
+                <table class="data-table" style="font-size:0.75rem">
                     <thead>
                         <tr>
-                            <th>#</th><th>Mã</th><th>Tín hiệu</th><th>Giá</th><th>%</th><th>RSI</th><th>RVOL</th>
+                            <th>#</th><th>Mã</th><th>Giá</th><th>%</th><th>RSI</th><th>RVOL</th>
+                            <th>Cắt lỗ</th><th>TP1</th><th>TP2</th><th>R:R</th><th>Lý do</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${list.map((s, i) => {
-                            const sigColor = type === 'MUA' ? '#22c55e' : '#ef4444';
+                            const reasons = (s.reasons || []).slice(0, 2).join('<br>');
+                            const tooltip = (s.reasons || []).join('\\n');
+                            const slColor = type === 'MUA' ? '#ef4444' : '#22c55e';
+                            const tpColor = type === 'MUA' ? '#22c55e' : '#ef4444';
                             return `<tr onclick="showStockDetail('${s.symbol}')" style="cursor:pointer">
                                 <td>${i + 1}</td>
                                 <td><strong>${s.symbol}</strong></td>
-                                <td style="color:${sigColor};font-weight:600">${type}</td>
                                 <td>${formatNumber(s.price)}</td>
                                 <td class="${(s.change_pct || 0) >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change_pct)}</td>
                                 <td>${s.rsi != null ? s.rsi.toFixed(1) : '--'}</td>
                                 <td>${s.volume_ratio != null ? s.volume_ratio.toFixed(1) + 'x' : '--'}</td>
+                                <td style="color:${slColor}">${s.stop_loss ? formatNumber(s.stop_loss) : '--'}</td>
+                                <td style="color:${tpColor}">${s.take_profit_1 ? formatNumber(s.take_profit_1) : '--'}</td>
+                                <td style="color:${tpColor}">${s.take_profit_2 ? formatNumber(s.take_profit_2) : '--'}</td>
+                                <td>${s.rrr ? s.rrr.toFixed(1) : '--'}</td>
+                                <td style="font-size:0.7rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${tooltip}">${reasons || '--'}</td>
                             </tr>`;
                         }).join('')}
                     </tbody>
                 </table>
+            </div>
+        `;
+    }
+
+    // Signal History section
+    function renderAFLSignalHistory(list) {
+        const allHistory = [];
+        list.forEach(s => {
+            if (s.signal_history && s.signal_history.length) {
+                s.signal_history.forEach(t => {
+                    allHistory.push({
+                        symbol: s.symbol,
+                        entry_date: t.entry_date,
+                        exit_date: t.exit_date,
+                        pnl_pct: t.pnl_pct,
+                        exit_reason: t.exit_reason,
+                        bars_held: t.bars_held,
+                    });
+                });
+            }
+        });
+        if (!allHistory.length) return '';
+
+        // Sort by entry_date descending
+        allHistory.sort((a, b) => (b.entry_date || '').localeCompare(a.entry_date || ''));
+
+        return `
+            <div class="card mt-3">
+                <div class="card-header">📋 Lịch sử tín hiệu gần nhất</div>
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size:0.75rem">
+                        <thead>
+                            <tr>
+                                <th>Mã</th><th>Ngày vào</th><th>Ngày ra</th><th>P&L</th><th>Số ngày</th><th>Lý do thoát</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allHistory.slice(0, 15).map(t => {
+                                const pnlColor = (t.pnl_pct || 0) >= 0 ? '#22c55e' : '#ef4444';
+                                const reasonMap = {'STOP_LOSS': 'Cắt lỗ', 'TAKE_PROFIT': 'Chốt lời', 'SIGNAL': 'Tín hiệu đảo chiều', 'MAX_HOLD': 'Hết thời gian nắm giữ'};
+                                return `<tr>
+                                    <td><strong>${t.symbol}</strong></td>
+                                    <td>${t.entry_date || '--'}</td>
+                                    <td>${t.exit_date || '--'}</td>
+                                    <td style="color:${pnlColor};font-weight:600">${(t.pnl_pct || 0).toFixed(1)}%</td>
+                                    <td>${t.bars_held || '--'}</td>
+                                    <td>${reasonMap[t.exit_reason] || t.exit_reason || '--'}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     }
@@ -1353,6 +1413,11 @@ function renderAFLSignals() {
     }
     if (document.getElementById('aflSellSignals')) {
         document.getElementById('aflSellSignals').innerHTML = renderAFLTable(sells, 'BÁN');
+    }
+    // Signal history
+    const histContainer = document.getElementById('aflSignalHistory');
+    if (histContainer) {
+        histContainer.innerHTML = renderAFLSignalHistory([...buys, ...sells]);
     }
 }
 

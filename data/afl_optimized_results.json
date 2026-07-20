@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T16:16:42.517402",
+  "generated_at": "2026-07-20T16:39:10.661113",
   "backtest_period": "2024-01-01 to 2025-12-31",
   "symbols_tested": 97,
   "best_strategy": "PsychIndex+MAI",
@@ -715,7 +715,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 10468.0,
+      "take_profit_1": 13332.0,
+      "take_profit_2": 14048.0,
+      "rrr": 1.0,
+      "atr": 716.0,
+      "signal_date": "2026-07-17",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-6.8 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-6.8 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "CTG",
@@ -731,7 +745,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 29319.0,
+      "take_profit_1": 32281.0,
+      "take_profit_2": 33021.0,
+      "rrr": 1.0,
+      "atr": 740.0,
+      "signal_date": "2026-07-16",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-4.7 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-4.7 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "EIB",
@@ -747,7 +775,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 16722.0,
+      "take_profit_1": 18978.0,
+      "take_profit_2": 19542.0,
+      "rrr": 1.0,
+      "atr": 564.0,
+      "signal_date": "2026-07-17",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-5.8 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-5.8 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "FPT",
@@ -763,7 +805,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 63565.0,
+      "take_profit_1": 70635.0,
+      "take_profit_2": 72402.0,
+      "rrr": 1.0,
+      "atr": 1767.0,
+      "signal_date": "2026-07-17",
+      "reasons": [
+        "PsychIndex=33.3 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-4.4 (vượt ngưỡng ±5)",
+        "PsychIndex=33.3 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-4.4 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "GEX",
@@ -779,7 +835,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 20598.0,
+      "take_profit_1": 25902.0,
+      "take_profit_2": 27228.0,
+      "rrr": 1.0,
+      "atr": 1326.0,
+      "signal_date": "2026-07-15",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-11.9 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-11.9 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "HCM",
@@ -795,7 +865,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 23234.0,
+      "take_profit_1": 28266.0,
+      "take_profit_2": 29524.0,
+      "rrr": 1.0,
+      "atr": 1258.0,
+      "signal_date": "2026-07-16",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-5.6 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-5.6 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "HPG",
@@ -811,7 +895,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 19510.0,
+      "take_profit_1": 21690.0,
+      "take_profit_2": 22235.0,
+      "rrr": 1.0,
+      "atr": 545.0,
+      "signal_date": "2026-07-15",
+      "reasons": [
+        "PsychIndex=16.7 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-4.8 (vượt ngưỡng ±5)",
+        "PsychIndex=16.7 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-4.8 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "PDR",
@@ -827,7 +925,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 11704.0,
+      "take_profit_1": 13696.0,
+      "take_profit_2": 14194.0,
+      "rrr": 1.0,
+      "atr": 498.0,
+      "signal_date": "2026-07-15",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-6.0 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-6.0 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "PNJ",
@@ -843,7 +955,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 35157.0,
+      "take_profit_1": 46843.0,
+      "take_profit_2": 49764.0,
+      "rrr": 1.0,
+      "atr": 2921.0,
+      "signal_date": "2026-07-20",
+      "reasons": [
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=-19.1 (vượt ngưỡng ±5)",
+        "PsychIndex=25.0 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=-19.1 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     },
     {
       "symbol": "STB",
@@ -859,7 +985,21 @@
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
         "RSVNINDEX": "MUA"
-      }
+      },
+      "stop_loss": 68260.0,
+      "take_profit_1": 77740.0,
+      "take_profit_2": 80109.0,
+      "rrr": 1.0,
+      "atr": 2370.0,
+      "signal_date": "2026-07-15",
+      "reasons": [
+        "PsychIndex=41.7 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "MA Impulse=0.5 (vượt ngưỡng ±5)",
+        "PsychIndex=41.7 (quá bán <25 → MUA, quá mua >75 → BÁN)",
+        "Volume pocket: giá tăng + KL giảm so HV10 + giá > MA20",
+        "MA Impulse=0.5 (vượt ngưỡng ±5)"
+      ],
+      "signal_history": []
     }
   ],
   "sell_signals": [],
