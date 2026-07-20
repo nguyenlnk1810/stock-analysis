@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T16:51:40.439767",
+  "generated_at": "2026-07-20T17:19:10.875413",
   "backtest_period": "2024-01-01 to 2025-12-31",
   "symbols_tested": 97,
   "best_strategy": "PsychIndex+MAI",
@@ -39,7 +39,7 @@
   "ranked_strategies": [
     {
       "strategy": "PsychIndex+MAI",
-      "type": 32.26755000000001,
+      "type": "combo",
       "avg_win_rate": 49.36027777777778,
       "avg_return": 3.669166666666667,
       "avg_profit_factor": 288.69722222222225,
@@ -50,7 +50,7 @@
     },
     {
       "strategy": "PsychIndex",
-      "type": 33.308372727272726,
+      "type": "individual",
       "avg_win_rate": 49.08181818181818,
       "avg_return": 7.461363636363634,
       "avg_profit_factor": 390.7763636363636,
@@ -61,7 +61,7 @@
     },
     {
       "strategy": "VolumePocket+MAI+Scoring",
-      "type": 32.55286111111111,
+      "type": "combo",
       "avg_win_rate": 48.86277777777778,
       "avg_return": 5.399166666666667,
       "avg_profit_factor": 216.99444444444447,
@@ -72,7 +72,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+MAI",
-      "type": 32.00482424242424,
+      "type": "combo",
       "avg_win_rate": 48.58060606060606,
       "avg_return": 3.8733333333333344,
       "avg_profit_factor": 506.409696969697,
@@ -83,7 +83,7 @@
     },
     {
       "strategy": "RSVNINDEX",
-      "type": 28.718338461538465,
+      "type": "individual",
       "avg_win_rate": 47.88230769230769,
       "avg_return": 18.281538461538467,
       "avg_profit_factor": 1.6430769230769233,
@@ -94,7 +94,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX",
-      "type": 28.550958974358974,
+      "type": "combo",
       "avg_win_rate": 47.79435897435897,
       "avg_return": 17.65666666666667,
       "avg_profit_factor": 1.6669230769230767,
@@ -105,7 +105,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+MAI",
-      "type": 27.748702564102565,
+      "type": "combo",
       "avg_win_rate": 47.37564102564103,
       "avg_return": 13.322820512820513,
       "avg_profit_factor": 1.9130769230769231,
@@ -116,7 +116,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI",
-      "type": 28.330969230769234,
+      "type": "combo",
       "avg_win_rate": 47.23230769230769,
       "avg_return": 17.974615384615387,
       "avg_profit_factor": 1.6282051282051284,
@@ -127,7 +127,7 @@
     },
     {
       "strategy": "RSVNINDEX+Scoring",
-      "type": 27.67043076923077,
+      "type": "combo",
       "avg_win_rate": 46.96051282051282,
       "avg_return": 16.468205128205128,
       "avg_profit_factor": 1.5912820512820516,
@@ -138,7 +138,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket",
-      "type": 27.158194871794873,
+      "type": "combo",
       "avg_win_rate": 46.86769230769231,
       "avg_return": 14.935384615384615,
       "avg_profit_factor": 1.5784615384615384,
@@ -149,7 +149,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI+ZangerVolume",
-      "type": 25.402651282051284,
+      "type": "combo",
       "avg_win_rate": 46.828205128205134,
       "avg_return": 9.228461538461538,
       "avg_profit_factor": 1.4769230769230772,
@@ -160,7 +160,7 @@
     },
     {
       "strategy": "RSVNINDEX+ZangerVolume",
-      "type": 26.966487179487178,
+      "type": "combo",
       "avg_win_rate": 46.75923076923077,
       "avg_return": 14.468974358974359,
       "avg_profit_factor": 1.572051282051282,
@@ -171,7 +171,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+Scoring",
-      "type": 31.382841025641028,
+      "type": "combo",
       "avg_win_rate": 46.67897435897436,
       "avg_return": 5.1476923076923065,
       "avg_profit_factor": 235.2289743589743,
@@ -182,7 +182,7 @@
     },
     {
       "strategy": "PsychIndex+VolumePocket+Scoring",
-      "type": 30.979372222222217,
+      "type": "combo",
       "avg_win_rate": 46.558611111111105,
       "avg_return": 3.139166666666667,
       "avg_profit_factor": 216.80611111111114,
@@ -193,7 +193,7 @@
     },
     {
       "strategy": "MAI+ZangerVolume",
-      "type": 25.49653333333334,
+      "type": "combo",
       "avg_win_rate": 46.47641025641026,
       "avg_return": 10.124615384615387,
       "avg_profit_factor": 1.4146153846153846,
@@ -204,7 +204,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+VolumePocket",
-      "type": 26.93272307692308,
+      "type": "combo",
       "avg_win_rate": 46.36948717948719,
       "avg_return": 14.081794871794873,
       "avg_profit_factor": 1.595897435897436,
@@ -215,7 +215,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI+Scoring",
-      "type": 30.665928205128203,
+      "type": "combo",
       "avg_win_rate": 46.352051282051285,
       "avg_return": 3.209230769230769,
       "avg_profit_factor": 89.77512820512821,
@@ -226,7 +226,7 @@
     },
     {
       "strategy": "PsychIndex+VolumePocket",
-      "type": 29.444620512820517,
+      "type": "combo",
       "avg_win_rate": 46.29,
       "avg_return": 17.01461538461539,
       "avg_profit_factor": 2.345128205128205,
@@ -237,7 +237,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+Scoring",
-      "type": 26.581379487179493,
+      "type": "combo",
       "avg_win_rate": 45.80641025641027,
       "avg_return": 12.845897435897438,
       "avg_profit_factor": 1.7120512820512823,
@@ -248,7 +248,7 @@
     },
     {
       "strategy": "PsychIndex+Scoring",
-      "type": 27.33546666666667,
+      "type": "combo",
       "avg_win_rate": 45.691538461538464,
       "avg_return": 8.613846153846154,
       "avg_profit_factor": 2.5769230769230766,
@@ -259,7 +259,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+ZangerVolume",
-      "type": 26.032425641025647,
+      "type": "combo",
       "avg_win_rate": 45.52897435897436,
       "avg_return": 11.894615384615387,
       "avg_profit_factor": 1.6458974358974363,
@@ -270,7 +270,7 @@
     },
     {
       "strategy": "MAI+ZangerVolume+Scoring",
-      "type": 24.505270588235295,
+      "type": "combo",
       "avg_win_rate": 45.25705882352941,
       "avg_return": 1.85470588235294,
       "avg_profit_factor": 2.26,
@@ -281,7 +281,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+VolumePocket+MAI+ZangerVolume+Scoring",
-      "type": 24.02839487179487,
+      "type": "combo",
       "avg_win_rate": 44.71974358974358,
       "avg_return": 6.994102564102564,
       "avg_profit_factor": 1.5325641025641026,
@@ -292,7 +292,7 @@
     },
     {
       "strategy": "VolumePocket",
-      "type": 28.629502564102566,
+      "type": "individual",
       "avg_win_rate": 44.70717948717949,
       "avg_return": 16.52179487179487,
       "avg_profit_factor": 2.31948717948718,
@@ -303,7 +303,7 @@
     },
     {
       "strategy": "RSVNINDEX+ZangerVolume+Scoring",
-      "type": 24.519999999999996,
+      "type": "combo",
       "avg_win_rate": 44.17820512820512,
       "avg_return": 9.528717948717945,
       "avg_profit_factor": 1.523076923076923,
@@ -314,7 +314,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+ZangerVolume",
-      "type": 25.066907692307698,
+      "type": "combo",
       "avg_win_rate": 44.040769230769236,
       "avg_return": 11.08948717948718,
       "avg_profit_factor": 1.594871794871795,
@@ -325,7 +325,7 @@
     },
     {
       "strategy": "VolumePocket+MAI",
-      "type": 26.654574358974358,
+      "type": "combo",
       "avg_win_rate": 43.97230769230769,
       "avg_return": 15.66205128205128,
       "avg_profit_factor": 1.6397435897435897,
@@ -336,7 +336,7 @@
     },
     {
       "strategy": "MAI+Scoring",
-      "type": 23.05835384615385,
+      "type": "combo",
       "avg_win_rate": 43.75923076923077,
       "avg_return": 2.3284615384615384,
       "avg_profit_factor": 1.810769230769231,
@@ -347,7 +347,7 @@
     },
     {
       "strategy": "VolumePocket+ZangerVolume",
-      "type": 26.63311282051282,
+      "type": "combo",
       "avg_win_rate": 43.37461538461539,
       "avg_return": 13.141794871794872,
       "avg_profit_factor": 2.148461538461538,
@@ -358,7 +358,7 @@
     },
     {
       "strategy": "VolumePocket+MAI+ZangerVolume",
-      "type": 25.061666666666667,
+      "type": "combo",
       "avg_win_rate": 43.26897435897437,
       "avg_return": 11.497692307692306,
       "avg_profit_factor": 1.5812820512820513,
@@ -371,7 +371,7 @@
   "all_ranked_methods": [
     {
       "strategy": "PsychIndex+MAI",
-      "type": 32.26755000000001,
+      "type": "combo",
       "avg_win_rate": 49.36027777777778,
       "avg_return": 3.669166666666667,
       "avg_profit_factor": 288.69722222222225,
@@ -382,7 +382,7 @@
     },
     {
       "strategy": "PsychIndex",
-      "type": 33.308372727272726,
+      "type": "individual",
       "avg_win_rate": 49.08181818181818,
       "avg_return": 7.461363636363634,
       "avg_profit_factor": 390.7763636363636,
@@ -393,7 +393,7 @@
     },
     {
       "strategy": "VolumePocket+MAI+Scoring",
-      "type": 32.55286111111111,
+      "type": "combo",
       "avg_win_rate": 48.86277777777778,
       "avg_return": 5.399166666666667,
       "avg_profit_factor": 216.99444444444447,
@@ -404,7 +404,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+MAI",
-      "type": 32.00482424242424,
+      "type": "combo",
       "avg_win_rate": 48.58060606060606,
       "avg_return": 3.8733333333333344,
       "avg_profit_factor": 506.409696969697,
@@ -415,7 +415,7 @@
     },
     {
       "strategy": "RSVNINDEX",
-      "type": 28.718338461538465,
+      "type": "individual",
       "avg_win_rate": 47.88230769230769,
       "avg_return": 18.281538461538467,
       "avg_profit_factor": 1.6430769230769233,
@@ -426,7 +426,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX",
-      "type": 28.550958974358974,
+      "type": "combo",
       "avg_win_rate": 47.79435897435897,
       "avg_return": 17.65666666666667,
       "avg_profit_factor": 1.6669230769230767,
@@ -437,7 +437,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+MAI",
-      "type": 27.748702564102565,
+      "type": "combo",
       "avg_win_rate": 47.37564102564103,
       "avg_return": 13.322820512820513,
       "avg_profit_factor": 1.9130769230769231,
@@ -448,7 +448,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI",
-      "type": 28.330969230769234,
+      "type": "combo",
       "avg_win_rate": 47.23230769230769,
       "avg_return": 17.974615384615387,
       "avg_profit_factor": 1.6282051282051284,
@@ -459,7 +459,7 @@
     },
     {
       "strategy": "RSVNINDEX+Scoring",
-      "type": 27.67043076923077,
+      "type": "combo",
       "avg_win_rate": 46.96051282051282,
       "avg_return": 16.468205128205128,
       "avg_profit_factor": 1.5912820512820516,
@@ -470,7 +470,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket",
-      "type": 27.158194871794873,
+      "type": "combo",
       "avg_win_rate": 46.86769230769231,
       "avg_return": 14.935384615384615,
       "avg_profit_factor": 1.5784615384615384,
@@ -481,7 +481,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI+ZangerVolume",
-      "type": 25.402651282051284,
+      "type": "combo",
       "avg_win_rate": 46.828205128205134,
       "avg_return": 9.228461538461538,
       "avg_profit_factor": 1.4769230769230772,
@@ -492,7 +492,7 @@
     },
     {
       "strategy": "RSVNINDEX+ZangerVolume",
-      "type": 26.966487179487178,
+      "type": "combo",
       "avg_win_rate": 46.75923076923077,
       "avg_return": 14.468974358974359,
       "avg_profit_factor": 1.572051282051282,
@@ -503,7 +503,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+Scoring",
-      "type": 31.382841025641028,
+      "type": "combo",
       "avg_win_rate": 46.67897435897436,
       "avg_return": 5.1476923076923065,
       "avg_profit_factor": 235.2289743589743,
@@ -514,7 +514,7 @@
     },
     {
       "strategy": "PsychIndex+VolumePocket+Scoring",
-      "type": 30.979372222222217,
+      "type": "combo",
       "avg_win_rate": 46.558611111111105,
       "avg_return": 3.139166666666667,
       "avg_profit_factor": 216.80611111111114,
@@ -525,7 +525,7 @@
     },
     {
       "strategy": "MAI+ZangerVolume",
-      "type": 25.49653333333334,
+      "type": "combo",
       "avg_win_rate": 46.47641025641026,
       "avg_return": 10.124615384615387,
       "avg_profit_factor": 1.4146153846153846,
@@ -536,7 +536,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+VolumePocket",
-      "type": 26.93272307692308,
+      "type": "combo",
       "avg_win_rate": 46.36948717948719,
       "avg_return": 14.081794871794873,
       "avg_profit_factor": 1.595897435897436,
@@ -547,7 +547,7 @@
     },
     {
       "strategy": "RSVNINDEX+MAI+Scoring",
-      "type": 30.665928205128203,
+      "type": "combo",
       "avg_win_rate": 46.352051282051285,
       "avg_return": 3.209230769230769,
       "avg_profit_factor": 89.77512820512821,
@@ -558,7 +558,7 @@
     },
     {
       "strategy": "PsychIndex+VolumePocket",
-      "type": 29.444620512820517,
+      "type": "combo",
       "avg_win_rate": 46.29,
       "avg_return": 17.01461538461539,
       "avg_profit_factor": 2.345128205128205,
@@ -569,7 +569,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+Scoring",
-      "type": 26.581379487179493,
+      "type": "combo",
       "avg_win_rate": 45.80641025641027,
       "avg_return": 12.845897435897438,
       "avg_profit_factor": 1.7120512820512823,
@@ -580,7 +580,7 @@
     },
     {
       "strategy": "PsychIndex+Scoring",
-      "type": 27.33546666666667,
+      "type": "combo",
       "avg_win_rate": 45.691538461538464,
       "avg_return": 8.613846153846154,
       "avg_profit_factor": 2.5769230769230766,
@@ -591,7 +591,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+ZangerVolume",
-      "type": 26.032425641025647,
+      "type": "combo",
       "avg_win_rate": 45.52897435897436,
       "avg_return": 11.894615384615387,
       "avg_profit_factor": 1.6458974358974363,
@@ -602,7 +602,7 @@
     },
     {
       "strategy": "MAI+ZangerVolume+Scoring",
-      "type": 24.505270588235295,
+      "type": "combo",
       "avg_win_rate": 45.25705882352941,
       "avg_return": 1.85470588235294,
       "avg_profit_factor": 2.26,
@@ -613,7 +613,7 @@
     },
     {
       "strategy": "PsychIndex+RSVNINDEX+VolumePocket+MAI+ZangerVolume+Scoring",
-      "type": 24.02839487179487,
+      "type": "combo",
       "avg_win_rate": 44.71974358974358,
       "avg_return": 6.994102564102564,
       "avg_profit_factor": 1.5325641025641026,
@@ -624,7 +624,7 @@
     },
     {
       "strategy": "VolumePocket",
-      "type": 28.629502564102566,
+      "type": "individual",
       "avg_win_rate": 44.70717948717949,
       "avg_return": 16.52179487179487,
       "avg_profit_factor": 2.31948717948718,
@@ -635,7 +635,7 @@
     },
     {
       "strategy": "RSVNINDEX+ZangerVolume+Scoring",
-      "type": 24.519999999999996,
+      "type": "combo",
       "avg_win_rate": 44.17820512820512,
       "avg_return": 9.528717948717945,
       "avg_profit_factor": 1.523076923076923,
@@ -646,7 +646,7 @@
     },
     {
       "strategy": "RSVNINDEX+VolumePocket+ZangerVolume",
-      "type": 25.066907692307698,
+      "type": "combo",
       "avg_win_rate": 44.040769230769236,
       "avg_return": 11.08948717948718,
       "avg_profit_factor": 1.594871794871795,
@@ -657,7 +657,7 @@
     },
     {
       "strategy": "VolumePocket+MAI",
-      "type": 26.654574358974358,
+      "type": "combo",
       "avg_win_rate": 43.97230769230769,
       "avg_return": 15.66205128205128,
       "avg_profit_factor": 1.6397435897435897,
@@ -668,7 +668,7 @@
     },
     {
       "strategy": "MAI+Scoring",
-      "type": 23.05835384615385,
+      "type": "combo",
       "avg_win_rate": 43.75923076923077,
       "avg_return": 2.3284615384615384,
       "avg_profit_factor": 1.810769230769231,
@@ -679,7 +679,7 @@
     },
     {
       "strategy": "VolumePocket+ZangerVolume",
-      "type": 26.63311282051282,
+      "type": "combo",
       "avg_win_rate": 43.37461538461539,
       "avg_return": 13.141794871794872,
       "avg_profit_factor": 2.148461538461538,
@@ -690,7 +690,7 @@
     },
     {
       "strategy": "VolumePocket+MAI+ZangerVolume",
-      "type": 25.061666666666667,
+      "type": "combo",
       "avg_win_rate": 43.26897435897437,
       "avg_return": 11.497692307692306,
       "avg_profit_factor": 1.5812820512820513,
@@ -1004,5 +1004,322 @@
   ],
   "sell_signals": [],
   "buy_count": 10,
-  "sell_count": 0
+  "sell_count": 0,
+  "signal_timeline": [
+    {
+      "date": "2026-07-20",
+      "symbol": "PNJ",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 41000.0
+    },
+    {
+      "date": "2026-07-17",
+      "symbol": "CEO",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 13100.0
+    },
+    {
+      "date": "2026-07-17",
+      "symbol": "EIB",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 19000.0
+    },
+    {
+      "date": "2026-07-16",
+      "symbol": "CTG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 31950.0
+    },
+    {
+      "date": "2026-07-16",
+      "symbol": "HCM",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 24750.0
+    },
+    {
+      "date": "2026-07-15",
+      "symbol": "GEX",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 25450.0
+    },
+    {
+      "date": "2026-07-15",
+      "symbol": "HPG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 22400.0
+    },
+    {
+      "date": "2026-07-15",
+      "symbol": "STB",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 69800.0
+    },
+    {
+      "date": "2026-07-13",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 70500.0
+    },
+    {
+      "date": "2026-07-13",
+      "symbol": "PDR",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 13800.0
+    },
+    {
+      "date": "2026-07-02",
+      "symbol": "HCM",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 29000.0
+    },
+    {
+      "date": "2026-07-01",
+      "symbol": "EIB",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 21050.0
+    },
+    {
+      "date": "2026-06-30",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 70200.0
+    },
+    {
+      "date": "2026-06-26",
+      "symbol": "CEO",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 14700.0
+    },
+    {
+      "date": "2026-06-19",
+      "symbol": "HPG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 23600.0
+    },
+    {
+      "date": "2026-06-18",
+      "symbol": "HCM",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 28450.0
+    },
+    {
+      "date": "2026-06-17",
+      "symbol": "STB",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 72100.0
+    },
+    {
+      "date": "2026-06-16",
+      "symbol": "GEX",
+      "signal": "MUA",
+      "strength": 60.0,
+      "price": 30800.0
+    },
+    {
+      "date": "2026-06-12",
+      "symbol": "PDR",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 14900.0
+    },
+    {
+      "date": "2026-06-12",
+      "symbol": "PNJ",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 62000.0
+    },
+    {
+      "date": "2026-06-09",
+      "symbol": "CEO",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 14800.0
+    },
+    {
+      "date": "2026-06-08",
+      "symbol": "HPG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 23300.0
+    },
+    {
+      "date": "2026-06-05",
+      "symbol": "GEX",
+      "signal": "MUA",
+      "strength": 60.0,
+      "price": 32000.0
+    },
+    {
+      "date": "2026-06-02",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 74800.0
+    },
+    {
+      "date": "2026-06-02",
+      "symbol": "HCM",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 26650.0
+    },
+    {
+      "date": "2026-06-01",
+      "symbol": "CTG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 34550.0
+    },
+    {
+      "date": "2026-05-29",
+      "symbol": "PNJ",
+      "signal": "MUA",
+      "strength": 60.0,
+      "price": 65800.0
+    },
+    {
+      "date": "2026-05-28",
+      "symbol": "STB",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 68000.0
+    },
+    {
+      "date": "2026-05-26",
+      "symbol": "STB",
+      "signal": "BAN",
+      "strength": 40.0,
+      "price": 69600.0
+    },
+    {
+      "date": "2026-05-25",
+      "symbol": "HPG",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 24100.0
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "EIB",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 21200.0
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "STB",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 71200.0
+    },
+    {
+      "date": "2026-05-20",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 77700.0
+    },
+    {
+      "date": "2026-05-15",
+      "symbol": "CEO",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 17700.0
+    },
+    {
+      "date": "2026-05-14",
+      "symbol": "GEX",
+      "signal": "MUA",
+      "strength": 60.0,
+      "price": 35150.0
+    },
+    {
+      "date": "2026-05-14",
+      "symbol": "PDR",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 16550.0
+    },
+    {
+      "date": "2026-05-12",
+      "symbol": "GEX",
+      "signal": "BAN",
+      "strength": 40.0,
+      "price": 34500.0
+    },
+    {
+      "date": "2026-05-11",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 70000.0
+    },
+    {
+      "date": "2026-05-11",
+      "symbol": "HCM",
+      "signal": "MUA",
+      "strength": 80.0,
+      "price": 27550.0
+    },
+    {
+      "date": "2026-05-07",
+      "symbol": "STB",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 73700.0
+    },
+    {
+      "date": "2026-05-05",
+      "symbol": "CEO",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 17100.0
+    },
+    {
+      "date": "2026-05-05",
+      "symbol": "CTG",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 35300.0
+    },
+    {
+      "date": "2026-04-28",
+      "symbol": "PNJ",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 67000.0
+    },
+    {
+      "date": "2026-04-24",
+      "symbol": "FPT",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 73400.0
+    },
+    {
+      "date": "2026-04-23",
+      "symbol": "PDR",
+      "signal": "MUA",
+      "strength": 40.0,
+      "price": 16050.0
+    }
+  ]
 }
