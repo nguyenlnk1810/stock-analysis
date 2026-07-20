@@ -22,7 +22,13 @@
             <div class="loader-sub">Đang tải dữ liệu thị trường...</div>
         </div>
     </div>
-    <script>document.documentElement.setAttribute('data-js','ok');console.log('JS inline test OK');</script>
+    <script>
+    // Safety: force-hide loading screen after 20s even if data.js fails
+    setTimeout(function(){
+        var ls=document.getElementById('loadingScreen');
+        if(ls) ls.classList.add('hidden');
+    }, 20000);
+    </script>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar">
