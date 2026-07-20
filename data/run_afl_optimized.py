@@ -664,10 +664,10 @@ with open(out_path, "w") as f:
     json.dump(output, f, ensure_ascii=False, indent=2, cls=NumpyEncoder)
 print(f"\nSaved: {out_path}")
 
-# Phase 4: Build signal timeline for date-based filtering
-print("\n\n=== Phase 4: Signal Timeline ===")
+# Phase 4: Build signal timeline for current top stocks
+print("\n\n=== Phase 4: Signal Timeline (Current Data) ===")
 signal_timeline = []
-timeline_symbols = list(set(list(all_buy_signals.keys()) + list(all_sell_signals.keys())))
+timeline_symbols = [s["symbol"] for s in buys_sorted + sells_sorted]
 
 for sym in timeline_symbols:
     path = os.path.join(cache_dir, f"{sym}.parquet")
@@ -679,21 +679,17 @@ for sym in timeline_symbols:
     df["date"] = pd.to_datetime(df["date"])
     close = df["close"].values
 
-    # Filter to 2024-2025
-    df_bt = df[(df["date"] >= "2024-01-01") & (df["date"] <= "2025-12-31")].reset_index(drop=True)
-    if len(df_bt) < 100:
+    # Only look at recent data (last 90 trading days)
+    df_bt = df.tail(120).reset_index(drop=True)
+    if len(df_bt) < 60:
         continue
     close_bt = df_bt["close"].values
     signals_dict_bt = compute_all_signals(df_bt)
 
     last_signal = None
-    step = max(1, len(df_bt) // 100)
-
-    for i in range(60, len(df_bt), step):
+    for i in range(60, len(df_bt)):
         bar_close = close_bt[:i+1]
-        bar_df = df_bt.iloc[:i+1]
         bar_signals = {k: v[:i+1] for k, v in signals_dict_bt.items()}
-
         mua_votes = 0
         ban_votes = 0
         for method_name, typ, wr, score in best_methods:
@@ -706,18 +702,15 @@ for sym in timeline_symbols:
                 mua_votes += 1
             elif sig_type == "BAN":
                 ban_votes += 1
-
         if mua_votes > ban_votes and mua_votes >= len(best_methods) * 0.4:
             overall = "MUA"
         elif ban_votes > mua_votes and ban_votes >= len(best_methods) * 0.4:
             overall = "BAN"
         else:
             overall = "NEUTRAL"
-
-        if overall != last_signal and overall != "NEUTRAL":
-            dt = str(df_bt["date"].iloc[i]).split()[0]
+        if overall != last_signal and overall in ("MUA", "BAN"):
             signal_timeline.append({
-                "date": dt,
+                "date": str(df_bt["date"].iloc[i]).split()[0],
                 "symbol": sym,
                 "signal": overall,
                 "strength": round(max(mua_votes, ban_votes) / len(best_methods) * 100, 0),
@@ -725,7 +718,7 @@ for sym in timeline_symbols:
             })
         last_signal = overall
 
-print(f"  Generated {len(signal_timeline)} timeline events across {len(timeline_symbols)} symbols")
+print(f"  Generated {len(signal_timeline)} timeline events across {len(timeline_symbols)} symbols (recent data)")
 
 # Build output with backward-compatible ranked_strategies for dashboard
 ranked_strategies = [
