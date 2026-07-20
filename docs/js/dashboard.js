@@ -10,13 +10,13 @@ let breadthChart = null;
 let signalChart = null;
 
 /* ===== INIT ===== */
-let _loadAttempts = 0;
 function initApp() {
     document.getElementById('headerDate').textContent =
         new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     loadData();
 }
 
+let _loadAttempts = 0;
 function loadData() {
     try {
         DATA = window._STOCK_DATA;
@@ -27,32 +27,48 @@ function loadData() {
             DATA.rankings.afl_backtest = window.AFL_BACKTEST;
         }
         if (DATA) {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            const badge = document.getElementById('dataLoadedBadge');
-            badge.textContent = '✓ DATA LOADED';
-            badge.style.cssText = 'position:fixed;top:4px;right:4px;background:#0f730f;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;z-index:99999';
+            hideLoading();
             renderAll();
-        } else if (++_loadAttempts < 20) {
-            setTimeout(loadData, 500);
+        } else if (++_loadAttempts < 40) {
+            setTimeout(loadData, 250);
         } else {
-            const ls = document.getElementById('loadingScreen');
-            if (ls) {
-                ls.innerHTML = '<div class="loader"><div style="color:#ef4444;font-size:18px;margin-bottom:12px">⚠️ Không thể tải dữ liệu</div><div style="color:#94a3b8;font-size:14px">window._STOCK_DATA = ' + typeof window._STOCK_DATA + '<br>window.AFL_SIGNALS = ' + typeof window.AFL_SIGNALS + '<br>Vui lòng kiểm tra console (F12) và báo lỗi</div></div>';
-            }
+            showError('Không thể tải dữ liệu', '_STOCK_DATA=' + typeof window._STOCK_DATA + ' AFL_SIGNALS=' + typeof window.AFL_SIGNALS);
         }
     } catch (e) {
         console.error('Load error:', e);
-        document.getElementById('loadingScreen').classList.add('hidden');
+        hideLoading();
         showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
     }
 }
 
-// Run on DOMContentLoaded OR immediately if already loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp();
+function hideLoading() {
+    const ls = document.getElementById('loadingScreen');
+    if (ls) ls.classList.add('hidden');
+    const badge = document.getElementById('dataLoadedBadge');
+    if (badge) {
+        badge.textContent = '✓ DATA LOADED';
+        badge.style.cssText = 'position:fixed;top:4px;right:4px;background:#0f730f;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;z-index:99999';
+    }
 }
+
+function showError(title, detail) {
+    const ls = document.getElementById('loadingScreen');
+    if (ls) {
+        ls.innerHTML = '<div class="loader"><div style="color:#ef4444;font-size:18px;margin-bottom:12px">⚠️ ' + title + '</div><div style="color:#94a3b8;font-size:14px">' + detail + '<br>Thử Cmd+Shift+R hoặc mở Console (F12) để xem lỗi</div></div>';
+    }
+}
+
+// Safety: force-hide loading after 15s no matter what
+setTimeout(function() {
+    const ls = document.getElementById('loadingScreen');
+    if (ls && !ls.classList.contains('hidden')) {
+        ls.classList.add('hidden');
+        showToast('Trang đã được tải (có thể dữ liệu chưa đầy đủ)', 'info');
+    }
+}, 15000);
+
+// Run immediately (script is at end of body, DOM is ready)
+initApp();
 
 function refreshData() {
     showToast('Đang làm mới dữ liệu...', 'info');
