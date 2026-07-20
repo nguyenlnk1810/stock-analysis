@@ -10,16 +10,16 @@ let breadthChart = null;
 let signalChart = null;
 
 /* ===== INIT ===== */
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+let _loadAttempts = 0;
+function initApp() {
     document.getElementById('headerDate').textContent =
         new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-});
+    loadData();
+}
 
 function loadData() {
     try {
         DATA = window._STOCK_DATA;
-        // Merge AFL data if loaded separately
         if (window.AFL_SIGNALS && DATA && DATA.rankings) {
             DATA.rankings.afl_signals = window.AFL_SIGNALS;
         }
@@ -32,14 +32,26 @@ function loadData() {
             badge.textContent = '✓ DATA LOADED';
             badge.style.cssText = 'position:fixed;top:4px;right:4px;background:#0f730f;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;z-index:99999';
             renderAll();
-        } else {
+        } else if (++_loadAttempts < 20) {
             setTimeout(loadData, 500);
+        } else {
+            const ls = document.getElementById('loadingScreen');
+            if (ls) {
+                ls.innerHTML = '<div class="loader"><div style="color:#ef4444;font-size:18px;margin-bottom:12px">⚠️ Không thể tải dữ liệu</div><div style="color:#94a3b8;font-size:14px">window._STOCK_DATA = ' + typeof window._STOCK_DATA + '<br>window.AFL_SIGNALS = ' + typeof window.AFL_SIGNALS + '<br>Vui lòng kiểm tra console (F12) và báo lỗi</div></div>';
+            }
         }
     } catch (e) {
         console.error('Load error:', e);
         document.getElementById('loadingScreen').classList.add('hidden');
         showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
     }
+}
+
+// Run on DOMContentLoaded OR immediately if already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
 }
 
 function refreshData() {
