@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T16:12:55.446962",
+  "generated_at": "2026-07-20T16:16:42.517402",
   "backtest_period": "2024-01-01 to 2025-12-31",
   "symbols_tested": 97,
   "best_strategy": "PsychIndex+MAI",
@@ -702,12 +702,60 @@
   ],
   "buy_signals": [
     {
+      "symbol": "CEO",
+      "signal": "MUA",
+      "price": 11900.0,
+      "change_pct": -9.16,
+      "rsi": 14.4,
+      "volume_ratio": 2.08,
+      "strength": 80.0,
+      "details": {
+        "PsychIndex+MAI": "MUA",
+        "PsychIndex": "MUA",
+        "VolumePocket+MAI+Scoring": "NEUTRAL",
+        "PsychIndex+RSVNINDEX+MAI": "MUA",
+        "RSVNINDEX": "MUA"
+      }
+    },
+    {
       "symbol": "CTG",
       "signal": "MUA",
-      "price": 31950.0,
-      "change_pct": -0.62,
-      "rsi": 16.7,
-      "volume_ratio": 1.17,
+      "price": 30800.0,
+      "change_pct": -3.75,
+      "rsi": 11.2,
+      "volume_ratio": 1.43,
+      "strength": 80.0,
+      "details": {
+        "PsychIndex+MAI": "MUA",
+        "PsychIndex": "MUA",
+        "VolumePocket+MAI+Scoring": "NEUTRAL",
+        "PsychIndex+RSVNINDEX+MAI": "MUA",
+        "RSVNINDEX": "MUA"
+      }
+    },
+    {
+      "symbol": "EIB",
+      "signal": "MUA",
+      "price": 17850.0,
+      "change_pct": -6.05,
+      "rsi": 10.8,
+      "volume_ratio": 1.61,
+      "strength": 80.0,
+      "details": {
+        "PsychIndex+MAI": "MUA",
+        "PsychIndex": "MUA",
+        "VolumePocket+MAI+Scoring": "NEUTRAL",
+        "PsychIndex+RSVNINDEX+MAI": "MUA",
+        "RSVNINDEX": "MUA"
+      }
+    },
+    {
+      "symbol": "FPT",
+      "signal": "MUA",
+      "price": 67100.0,
+      "change_pct": 0.15,
+      "rsi": 27.2,
+      "volume_ratio": 0.96,
       "strength": 80.0,
       "details": {
         "PsychIndex+MAI": "MUA",
@@ -720,10 +768,10 @@
     {
       "symbol": "GEX",
       "signal": "MUA",
-      "price": 24300.0,
-      "change_pct": -4.52,
-      "rsi": 17.5,
-      "volume_ratio": 0.71,
+      "price": 23250.0,
+      "change_pct": -7.0,
+      "rsi": 20.4,
+      "volume_ratio": 1.21,
       "strength": 80.0,
       "details": {
         "PsychIndex+MAI": "MUA",
@@ -736,10 +784,26 @@
     {
       "symbol": "HCM",
       "signal": "MUA",
-      "price": 24750.0,
-      "change_pct": -8.33,
-      "rsi": 18.7,
-      "volume_ratio": 1.53,
+      "price": 25750.0,
+      "change_pct": 1.38,
+      "rsi": 35.4,
+      "volume_ratio": 1.64,
+      "strength": 80.0,
+      "details": {
+        "PsychIndex+MAI": "MUA",
+        "PsychIndex": "MUA",
+        "VolumePocket+MAI+Scoring": "NEUTRAL",
+        "PsychIndex+RSVNINDEX+MAI": "MUA",
+        "RSVNINDEX": "MUA"
+      }
+    },
+    {
+      "symbol": "HPG",
+      "signal": "MUA",
+      "price": 20600.0,
+      "change_pct": -5.72,
+      "rsi": 7.7,
+      "volume_ratio": 2.7,
       "strength": 80.0,
       "details": {
         "PsychIndex+MAI": "MUA",
@@ -752,10 +816,26 @@
     {
       "symbol": "PDR",
       "signal": "MUA",
-      "price": 13400.0,
-      "change_pct": -2.19,
-      "rsi": 14.3,
-      "volume_ratio": 1.33,
+      "price": 12700.0,
+      "change_pct": -5.58,
+      "rsi": 10.2,
+      "volume_ratio": 1.98,
+      "strength": 80.0,
+      "details": {
+        "PsychIndex+MAI": "MUA",
+        "PsychIndex": "MUA",
+        "VolumePocket+MAI+Scoring": "NEUTRAL",
+        "PsychIndex+RSVNINDEX+MAI": "MUA",
+        "RSVNINDEX": "MUA"
+      }
+    },
+    {
+      "symbol": "PNJ",
+      "signal": "MUA",
+      "price": 41000.0,
+      "change_pct": -4.65,
+      "rsi": 22.5,
+      "volume_ratio": 1.19,
       "strength": 80.0,
       "details": {
         "PsychIndex+MAI": "MUA",
@@ -768,69 +848,21 @@
     {
       "symbol": "STB",
       "signal": "MUA",
-      "price": 71700.0,
-      "change_pct": 2.72,
-      "rsi": 55.6,
-      "volume_ratio": 1.39,
+      "price": 73000.0,
+      "change_pct": -0.68,
+      "rsi": 60.9,
+      "volume_ratio": 1.18,
       "strength": 80.0,
       "details": {
         "PsychIndex+MAI": "MUA",
         "PsychIndex": "MUA",
         "VolumePocket+MAI+Scoring": "NEUTRAL",
         "PsychIndex+RSVNINDEX+MAI": "MUA",
-        "RSVNINDEX": "MUA"
-      }
-    },
-    {
-      "symbol": "TPB",
-      "signal": "MUA",
-      "price": 15100.0,
-      "change_pct": -1.31,
-      "rsi": 17.2,
-      "volume_ratio": 0.9,
-      "strength": 80.0,
-      "details": {
-        "PsychIndex+MAI": "MUA",
-        "PsychIndex": "MUA",
-        "VolumePocket+MAI+Scoring": "NEUTRAL",
-        "PsychIndex+RSVNINDEX+MAI": "MUA",
-        "RSVNINDEX": "MUA"
-      }
-    },
-    {
-      "symbol": "OCB",
-      "signal": "MUA",
-      "price": 10900.0,
-      "change_pct": 1.4,
-      "rsi": 33.7,
-      "volume_ratio": 0.45,
-      "strength": 60.0,
-      "details": {
-        "PsychIndex+MAI": "MUA",
-        "PsychIndex": "NEUTRAL",
-        "VolumePocket+MAI+Scoring": "NEUTRAL",
-        "PsychIndex+RSVNINDEX+MAI": "MUA",
-        "RSVNINDEX": "MUA"
-      }
-    },
-    {
-      "symbol": "MBB",
-      "signal": "MUA",
-      "price": 24650.0,
-      "change_pct": 0.2,
-      "rsi": 37.5,
-      "volume_ratio": 0.85,
-      "strength": 40.0,
-      "details": {
-        "PsychIndex+MAI": "NEUTRAL",
-        "PsychIndex": "NEUTRAL",
-        "VolumePocket+MAI+Scoring": "MUA",
-        "PsychIndex+RSVNINDEX+MAI": "NEUTRAL",
         "RSVNINDEX": "MUA"
       }
     }
   ],
   "sell_signals": [],
-  "buy_count": 8,
+  "buy_count": 10,
   "sell_count": 0
 }
