@@ -13,35 +13,47 @@ let signalChart = null;
 function initApp() {
     document.getElementById('headerDate').textContent =
         new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    loadData();
+    loadAFL();
+    fetchStockData();
 }
 
-let _loadAttempts = 0;
-function loadData() {
-    try {
-        DATA = window._STOCK_DATA;
-        if (window.AFL_SIGNALS && DATA && DATA.rankings) {
-            DATA.rankings.afl_signals = window.AFL_SIGNALS;
-        }
-        if (window.AFL_BACKTEST && DATA && DATA.rankings) {
-            DATA.rankings.afl_backtest = window.AFL_BACKTEST;
-        }
-        if (DATA) {
-            hideLoading();
-            renderAll();
-        } else {
-            _loadAttempts++;
-            if (_loadAttempts < 200) {
-                setTimeout(loadData, 250);
-            } else {
-                showError('Không thể tải dữ liệu', 'Đã thử 200 lần (50s). _STOCK_DATA=' + typeof window._STOCK_DATA + ' AFL_SIGNALS=' + typeof window.AFL_SIGNALS);
+function loadAFL() {
+    if (window.AFL_SIGNALS) {
+        window._AFL_SIGNALS = window.AFL_SIGNALS;
+    }
+    if (window.AFL_BACKTEST) {
+        window._AFL_BACKTEST = window.AFL_BACKTEST;
+    }
+}
+
+function fetchStockData() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/stock_data.json?_=' + Date.now(), true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                window._STOCK_DATA = JSON.parse(xhr.responseText);
+                if (window._AFL_SIGNALS && window._STOCK_DATA && window._STOCK_DATA.rankings) {
+                    window._STOCK_DATA.rankings.afl_signals = window._AFL_SIGNALS;
+                }
+                if (window._AFL_BACKTEST && window._STOCK_DATA && window._STOCK_DATA.rankings) {
+                    window._STOCK_DATA.rankings.afl_backtest = window._AFL_BACKTEST;
+                }
+                DATA = window._STOCK_DATA;
+                hideLoading();
+                renderAll();
+                return;
+            } catch(e) {
+                console.error('JSON parse error:', e);
             }
         }
-    } catch (e) {
-        console.error('Load error:', e);
-        hideLoading();
-        showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
-    }
+        // Retry on failure
+        setTimeout(fetchStockData, 1000);
+    };
+    xhr.onerror = function() {
+        setTimeout(fetchStockData, 1000);
+    };
+    xhr.send();
 }
 
 function hideLoading() {
@@ -54,21 +66,13 @@ function hideLoading() {
     }
 }
 
-function showError(title, detail) {
-    const ls = document.getElementById('loadingScreen');
-    if (ls) {
-        ls.innerHTML = '<div class="loader"><div style="color:#ef4444;font-size:18px;margin-bottom:12px">⚠️ ' + title + '</div><div style="color:#94a3b8;font-size:14px">' + detail + '<br>Thử Cmd+Shift+R hoặc mở Console (F12) để xem lỗi</div></div>';
-    }
-}
-
-// Safety: force-hide loading after 15s no matter what
+// Safety: force-hide loading after 20s no matter what
 setTimeout(function() {
     const ls = document.getElementById('loadingScreen');
     if (ls && !ls.classList.contains('hidden')) {
         ls.classList.add('hidden');
-        showToast('Trang đã được tải (có thể dữ liệu chưa đầy đủ)', 'info');
     }
-}, 15000);
+}, 20000);
 
 // Run immediately (script is at end of body, DOM is ready)
 initApp();
