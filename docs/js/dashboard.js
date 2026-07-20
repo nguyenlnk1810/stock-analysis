@@ -1356,6 +1356,102 @@ function renderAFLSignals() {
         `;
     }
 
+    // Timeline + date filter
+    renderAFLTimeline(afl);
+}
+
+function renderAFLTimeline(afl) {
+    const timeline = (afl && afl.signal_timeline) || [];
+    const container = document.getElementById('aflTimelineBody');
+    if (!container) return;
+
+    if (!timeline.length) {
+        container.innerHTML = '<div class="signal-placeholder">Chưa có dữ liệu dòng thời gian</div>';
+        return;
+    }
+
+    // Get date range
+    const dates = [...new Set(timeline.map(t => t.date))].sort().reverse();
+    const fromInput = document.getElementById('aflFilterFrom');
+    const toInput = document.getElementById('aflFilterTo');
+    if (fromInput && !fromInput.value && dates.length) {
+        fromInput.value = dates[dates.length - 1];
+        toInput.value = dates[0];
+    }
+
+    // Filter by date
+    const fromDate = fromInput ? fromInput.value : '';
+    const toDate = toInput ? toInput.value : '';
+    let filtered = timeline;
+    if (fromDate) filtered = filtered.filter(t => t.date >= fromDate);
+    if (toDate) filtered = filtered.filter(t => t.date <= toDate);
+
+    const countEl = document.getElementById('aflFilterCount');
+    if (countEl) countEl.textContent = `Hiển thị ${filtered.length} tín hiệu`;
+
+    // Group by date
+    const byDate = {};
+    filtered.forEach(t => {
+        if (!byDate[t.date]) byDate[t.date] = [];
+        byDate[t.date].push(t);
+    });
+
+    const sortedDates = Object.keys(byDate).sort().reverse();
+    if (!sortedDates.length) {
+        container.innerHTML = '<div class="signal-placeholder">Không có tín hiệu trong khoảng thời gian này</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="max-height:400px;overflow-y:auto">
+            <table class="data-table" style="font-size:0.75rem">
+                <thead style="position:sticky;top:0">
+                    <tr>
+                        <th>Ngày</th><th>Mã</th><th>Tín hiệu</th><th>Giá</th><th>Sức mạnh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sortedDates.map(date => {
+                        const items = byDate[date];
+                        const muaCount = items.filter(t => t.signal === 'MUA').length;
+                        const banCount = items.filter(t => t.signal === 'BAN').length;
+                        return items.map((t, i) => {
+                            const sigColor = t.signal === 'MUA' ? '#22c55e' : '#ef4444';
+                            const sigLabel = t.signal === 'MUA' ? 'MUA' : 'BÁN';
+                            const dateDisplay = i === 0 ? `<strong>${date}</strong>` : '';
+                            const summary = i === 0 ? `<span style="color:#94a3b8;font-size:0.65rem"> (${muaCount}M/${banCount}B)</span>` : '';
+                            return `<tr onclick="showStockDetail('${t.symbol}')" style="cursor:pointer">
+                                <td>${dateDisplay}${summary}</td>
+                                <td><strong>${t.symbol}</strong></td>
+                                <td style="color:${sigColor};font-weight:600">${sigLabel}</td>
+                                <td>${t.price ? t.price.toLocaleString() : '--'}</td>
+                                <td>${t.strength ? t.strength + '%' : '--'}</td>
+                            </tr>`;
+                        }).join('');
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+window.filterAFLTimeline = function() {
+    const afl = window.AFL_SIGNALS;
+    if (afl) renderAFLTimeline(afl);
+};
+
+window.resetAFLFilter = function() {
+    const fromInput = document.getElementById('aflFilterFrom');
+    const toInput = document.getElementById('aflFilterTo');
+    const afl = window.AFL_SIGNALS;
+    if (fromInput && afl && afl.signal_timeline && afl.signal_timeline.length) {
+        const dates = [...new Set(afl.signal_timeline.map(t => t.date))].sort();
+        fromInput.value = dates[0] || '';
+        toInput.value = dates[dates.length - 1] || '';
+    }
+    if (afl) renderAFLTimeline(afl);
+};
+
     // Signal History section
     function renderAFLSignalHistory(list) {
         const allHistory = [];

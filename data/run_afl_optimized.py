@@ -664,6 +664,93 @@ with open(out_path, "w") as f:
     json.dump(output, f, ensure_ascii=False, indent=2, cls=NumpyEncoder)
 print(f"\nSaved: {out_path}")
 
+# Phase 4: Build signal timeline for date-based filtering
+print("\n\n=== Phase 4: Signal Timeline ===")
+signal_timeline = []
+timeline_symbols = list(set(list(all_buy_signals.keys()) + list(all_sell_signals.keys())))
+
+for sym in timeline_symbols:
+    path = os.path.join(cache_dir, f"{sym}.parquet")
+    if not os.path.exists(path):
+        continue
+    df = pd.read_parquet(path)
+    df.columns = [c.lower() for c in df.columns]
+    df = df.sort_values("date").reset_index(drop=True)
+    df["date"] = pd.to_datetime(df["date"])
+    close = df["close"].values
+
+    # Filter to 2024-2025
+    df_bt = df[(df["date"] >= "2024-01-01") & (df["date"] <= "2025-12-31")].reset_index(drop=True)
+    if len(df_bt) < 100:
+        continue
+    close_bt = df_bt["close"].values
+    signals_dict_bt = compute_all_signals(df_bt)
+
+    last_signal = None
+    step = max(1, len(df_bt) // 100)
+
+    for i in range(60, len(df_bt), step):
+        bar_close = close_bt[:i+1]
+        bar_df = df_bt.iloc[:i+1]
+        bar_signals = {k: v[:i+1] for k, v in signals_dict_bt.items()}
+
+        mua_votes = 0
+        ban_votes = 0
+        for method_name, typ, wr, score in best_methods:
+            if typ == "combo":
+                combo_names = tuple(method_name.split("+"))
+                sig_type, _, _ = compute_current_signal(bar_signals, combo_names, bar_close)
+            else:
+                sig_type, _, _ = compute_current_signal(bar_signals, method_name, bar_close)
+            if sig_type == "MUA":
+                mua_votes += 1
+            elif sig_type == "BAN":
+                ban_votes += 1
+
+        if mua_votes > ban_votes and mua_votes >= len(best_methods) * 0.4:
+            overall = "MUA"
+        elif ban_votes > mua_votes and ban_votes >= len(best_methods) * 0.4:
+            overall = "BAN"
+        else:
+            overall = "NEUTRAL"
+
+        if overall != last_signal and overall != "NEUTRAL":
+            dt = str(df_bt["date"].iloc[i]).split()[0]
+            signal_timeline.append({
+                "date": dt,
+                "symbol": sym,
+                "signal": overall,
+                "strength": round(max(mua_votes, ban_votes) / len(best_methods) * 100, 0),
+                "price": float(close_bt[i]),
+            })
+        last_signal = overall
+
+print(f"  Generated {len(signal_timeline)} timeline events across {len(timeline_symbols)} symbols")
+
+# Build output with backward-compatible ranked_strategies for dashboard
+ranked_strategies = [
+    {"strategy": r[0], "type": r[7], "avg_win_rate": r[1], "avg_return": r[2], "avg_profit_factor": r[3],
+     "avg_max_dd": r[4], "symbols_tested": r[5], "total_trades": r[6],
+     "composite_score": r[7] if len(r) > 7 and isinstance(r[7], (int, float)) else r[8] if len(r) > 8 else 0}
+    for r in all_ranked[:30]
+]
+
+output = {
+    "generated_at": datetime.now().isoformat(),
+    "backtest_period": "2024-01-01 to 2025-12-31",
+    "symbols_tested": len(symbols),
+    "best_strategy": best_methods[0][0] if best_methods else "VolumePocket",
+    "best_win_rate": best_methods[0][2] if best_methods else 0,
+    "best_methods": [{"name": m[0], "type": m[1], "win_rate": m[2], "composite_score": m[3]} for m in best_methods],
+    "ranked_strategies": ranked_strategies,
+    "all_ranked_methods": ranked_strategies,
+    "buy_signals": buys_sorted,
+    "sell_signals": sells_sorted,
+    "buy_count": len(buys_sorted),
+    "sell_count": len(sells_sorted),
+    "signal_timeline": sorted(signal_timeline, key=lambda x: x["date"], reverse=True),
+}
+
 # Update dashboard
 print("\n=== Update Dashboard ===")
 afl_data = {
@@ -673,6 +760,7 @@ afl_data = {
     "neutral_signals": [],
     "buy_count": len(buys_sorted),
     "sell_count": len(sells_sorted),
+    "signal_timeline": sorted(signal_timeline, key=lambda x: x["date"], reverse=True),
 }
 
 js_block = '<script>window.AFL_SIGNALS=' + json.dumps(afl_data, ensure_ascii=False, cls=NumpyEncoder) + ';' + \
