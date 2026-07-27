@@ -28,7 +28,7 @@ function loadAFL() {
 
 function fetchStockData() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'data/stock_data.json?_=' + Date.now(), true);
+    xhr.open('GET', 'data/analysis.json?_=' + Date.now(), true);
     xhr.timeout = 15000; // 15s timeout
     xhr.onload = function() {
         if (xhr.status === 200) {

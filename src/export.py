@@ -273,6 +273,9 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
         json_path = os.path.join(self.output_dir, "analysis.json")
         with open(json_path, "w", encoding="utf-8") as f:
             f.write(json_str)
+        stock_json_path = os.path.join(self.output_dir, "stock_data.json")
+        with open(stock_json_path, "w", encoding="utf-8") as f:
+            f.write(json_str)
         js_path = os.path.join(self.output_dir, "data.js")
         with open(js_path, "w", encoding="utf-8") as f:
             f.write("window._STOCK_DATA = " + json_str + ";")
