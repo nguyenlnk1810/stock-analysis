@@ -270,7 +270,7 @@ function renderBreadth() {
     document.getElementById('breadthAdv').textContent = bd.advancing ?? '--';
     document.getElementById('breadthDec').textContent = bd.declining ?? '--';
     document.getElementById('breadthUnch').textContent = bd.unchanged ?? '--';
-    document.getElementById('brMA20').textContent = bd.above_ma20 != null ? bd.above_ma20 + '/' + bd.total : '--';
+    document.getElementById('brMA20').textContent = bd.above_ma20 != null ? bd.total != null ? bd.above_ma20 + '/' + bd.total : '--'; : '--';
     document.getElementById('brMA50').textContent = bd.above_ma50 != null ? bd.above_ma50 + '/' + bd.total : '--';
     document.getElementById('brMA200').textContent = bd.above_ma200 != null ? bd.above_ma200 + '/' + bd.total : '--';
     document.getElementById('brRSI50').textContent = bd.rsi_above_50 != null ? bd.rsi_above_50 + '/' + bd.total : '--';
@@ -338,7 +338,7 @@ function renderSignals() {
                 <div class="signal-price">${formatNumber(s.price)}</div>
                 <div class="signal-change ${s.change >= 0 ? 'positive' : 'negative'}">${formatPercent(s.change)}</div>
             </div>
-            <div class="signal-score">${s.score}</div>
+            <div class="signal-score">${s.score ?? ''}</div>
         </div>
     `).join('');
 }
@@ -476,7 +476,7 @@ function renderReportTable() {
     const ov = DATA.market_overview || {};
     const container = document.getElementById('reportTable');
     const rows = [
-        { label: 'Ngày giao dịch', value: idx.last_date || DATA.exported_at ? new Date(DATA.exported_at).toLocaleDateString('vi-VN') : '--' },
+        { label: 'Ngày giao dịch', value: idx.last_date ? new Date(idx.last_date).toLocaleDateString('vi-VN') : DATA.exported_at ? new Date(DATA.exported_at).toLocaleDateString('vi-VN') : '--' },
         { label: 'VN-Index', value: formatNumber(idx.current) },
         { label: 'Thay đổi', value: formatPercent(idx.change_pct), color: (idx.change_pct || 0) >= 0 ? '#22c55e' : '#ef4444' },
         { label: 'Mở cửa', value: formatNumber(idx.open) },
@@ -1116,7 +1116,7 @@ function showStockDetail(symbol) {
     const penalties = scoring.mien_diem || [];
     const penaltyHtml = penalties.length ? `
         <div style="margin-top:12px">
-            <div style="color:#ef4444;font-size:0.85rem;margin-bottom:6px"><i class="fas fa-exclamation-triangle"></i> Hình phạt (${penalties.reduce((a, b) => a + b.diem, 0)} điểm)</div>
+            <div style="color:#ef4444;font-size:0.85rem;margin-bottom:6px"><i class="fas fa-exclamation-triangle"></i> Hình phạt (${penalties.reduce((a, b) => a + (b.diem || 0), 0)} điểm)</div>
             ${penalties.map(p => `<div style="font-size:0.75rem;color:#ef4444;padding:2px 0">• ${p.ten}: ${p.diem}</div>`).join('')}
         </div>
     ` : '';

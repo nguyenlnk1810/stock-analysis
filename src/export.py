@@ -267,7 +267,17 @@ Nhóm ngành thu hút dòng tiền: {sec_text}.
             "ai_report": ai_report,
         }
 
+    def _sanitize(self, obj):
+        if isinstance(obj, float) and (obj != obj or obj == float('inf') or obj == float('-inf')):
+            return None
+        if isinstance(obj, dict):
+            return {k: self._sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [self._sanitize(v) for v in obj]
+        return obj
+
     def _write_output(self, export):
+        export = self._sanitize(export)
         json_str = json.dumps(export, ensure_ascii=False, default=str)
         json_path = os.path.join(self.output_dir, "analysis.json")
         with open(json_path, "w", encoding="utf-8") as f:
