@@ -27,9 +27,17 @@ function loadAFL() {
 }
 
 function fetchStockData() {
+    if (window._STOCK_DATA) {
+        DATA = window._STOCK_DATA;
+        if (window._AFL_SIGNALS && DATA && DATA.rankings) DATA.rankings.afl_signals = window._AFL_SIGNALS;
+        if (window._AFL_BACKTEST && DATA && DATA.rankings) DATA.rankings.afl_backtest = window._AFL_BACKTEST;
+        hideLoading();
+        try { renderAll(); } catch(e) { console.error('renderAll error:', e); }
+        return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'data/analysis.json?_=' + Date.now(), true);
-    xhr.timeout = 15000; // 15s timeout
+    xhr.timeout = 15000;
     xhr.onload = function() {
         if (xhr.status === 200) {
             try {
@@ -42,7 +50,7 @@ function fetchStockData() {
                 }
                 DATA = window._STOCK_DATA;
                 hideLoading();
-                renderAll();
+                try { renderAll(); } catch(e) { console.error('renderAll error:', e); }
                 return;
             } catch(e) {
                 console.error('JSON parse error:', e);
@@ -51,11 +59,11 @@ function fetchStockData() {
         setTimeout(fetchStockData, 2000);
     };
     xhr.onerror = function() {
-        console.error('XHR error: cannot fetch data/stock_data.json');
+        console.error('XHR error: cannot fetch data/analysis.json');
         setTimeout(fetchStockData, 2000);
     };
     xhr.ontimeout = function() {
-        console.error('XHR timeout: data/stock_data.json took too long');
+        console.error('XHR timeout: data/analysis.json took too long');
         setTimeout(fetchStockData, 2000);
     };
     xhr.send();
