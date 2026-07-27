@@ -2,6 +2,13 @@
    AI STOCK ANALYST - Dashboard JavaScript
    ============================================ */
 
+window.__ERROR = null;
+window.onerror = function(msg, url, line, col, err) {
+    window.__ERROR = (err && err.stack) || msg + ' at ' + line + ':' + col;
+    var d = document.getElementById('loading');
+    if (d) d.innerHTML += '<div style="color:red;padding:10px;margin:10px;border:2px solid red;border-radius:4px;font-size:13px;background:#1a1a2e"><strong>LỖI:</strong> ' + window.__ERROR.replace(/\n/g, '<br>') + '</div>';
+};
+
 let DATA = null;
 let charts = {};
 let currentTopList = 'gainers';
@@ -13,17 +20,7 @@ let signalChart = null;
 function initApp() {
     document.getElementById('headerDate').textContent =
         new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    loadAFL();
     fetchStockData();
-}
-
-function loadAFL() {
-    if (window.AFL_SIGNALS) {
-        window._AFL_SIGNALS = window.AFL_SIGNALS;
-    }
-    if (window.AFL_BACKTEST) {
-        window._AFL_BACKTEST = window.AFL_BACKTEST;
-    }
 }
 
 function fetchStockData() {
@@ -1404,6 +1401,17 @@ function renderAFLSignals() {
         `;
     }
 
+    if (document.getElementById('aflBuySignals')) {
+        document.getElementById('aflBuySignals').innerHTML = renderAFLTable(buys, 'MUA');
+    }
+    if (document.getElementById('aflSellSignals')) {
+        document.getElementById('aflSellSignals').innerHTML = renderAFLTable(sells, 'BÁN');
+    }
+    const histContainer = document.getElementById('aflSignalHistory');
+    if (histContainer) {
+        histContainer.innerHTML = renderAFLSignalHistory([...buys, ...sells]);
+    }
+
     // Timeline + date filter
     renderAFLTimeline(afl);
 }
@@ -1551,19 +1559,6 @@ window.resetAFLFilter = function() {
             </div>
         `;
     }
-
-    if (document.getElementById('aflBuySignals')) {
-        document.getElementById('aflBuySignals').innerHTML = renderAFLTable(buys, 'MUA');
-    }
-    if (document.getElementById('aflSellSignals')) {
-        document.getElementById('aflSellSignals').innerHTML = renderAFLTable(sells, 'BÁN');
-    }
-    // Signal history
-    const histContainer = document.getElementById('aflSignalHistory');
-    if (histContainer) {
-        histContainer.innerHTML = renderAFLSignalHistory([...buys, ...sells]);
-    }
-}
 
 /* ===== CLOSE MODAL ON OUTSIDE CLICK ===== */
 window.onclick = function(e) {
