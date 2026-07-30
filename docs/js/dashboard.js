@@ -5,8 +5,12 @@
 window.__ERROR = null;
 window.onerror = function(msg, url, line, col, err) {
     window.__ERROR = (err && err.stack) || msg + ' at ' + line + ':' + col;
-    var d = document.getElementById('loading');
-    if (d) d.innerHTML += '<div style="color:red;padding:10px;margin:10px;border:2px solid red;border-radius:4px;font-size:13px;background:#1a1a2e"><strong>LỖI:</strong> ' + window.__ERROR.replace(/\n/g, '<br>') + '</div>';
+    var d = document.getElementById('errorToast');
+    if (d) {
+        d.textContent = '⚠ LỖI: ' + msg;
+        d.classList.add('show');
+        d.style.borderLeft = '3px solid #ef4444';
+    }
 };
 
 let DATA = null;
@@ -116,23 +120,9 @@ function switchTab(tabId) {
 function renderAll() {
     if (!DATA) return;
     updateSidebarStatus();
-    renderAIHero();
-    renderVNIndex();
-    renderBreadth();
-    renderSignals();
-    renderTopList();
-    renderSectorMini();
-    renderNews();
-    renderTradingTable();
-    renderReportTable();
-    renderBreadthDetailed();
-    renderSentiment();
-    renderAIReport();
-    renderSectorFull();
-    renderHeatmap();
-    renderSignalsTable();
-    renderWatchlist();
-    updateAIRecommendationBadge();
+    ['renderAIHero','renderVNIndex','renderBreadth','renderSignals','renderTopList','renderSectorMini','renderNews','renderTradingTable','renderReportTable','renderBreadthDetailed','renderSentiment','renderAIReport','renderSectorFull','renderHeatmap','renderSignalsTable','renderWatchlist','updateAIRecommendationBadge'].forEach(function(fn) {
+        try { window[fn](); } catch(e) { console.error(fn + ' error:', e); }
+    });
 }
 
 function showToast(message, type) {
