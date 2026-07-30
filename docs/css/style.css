@@ -71,7 +71,7 @@ body {
     z-index: 99999;
     transition: opacity 0.6s ease, visibility 0.6s ease;
 }
-#loadingScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+#loadingScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; display: none; }
 .loader { text-align: center; }
 .loader-spinner {
     width: 48px; height: 48px;

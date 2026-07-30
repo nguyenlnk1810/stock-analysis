@@ -19,6 +19,19 @@ let currentTopList = 'gainers';
 let currentSignalFilter = 'all';
 let breadthChart = null;
 let signalChart = null;
+let _pendingCharts = [];
+function _chart(cb) {
+    if (typeof Chart !== 'undefined') { cb(); }
+    else { _pendingCharts.push(cb); }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var check = setInterval(function() {
+        if (typeof Chart !== 'undefined') {
+            clearInterval(check);
+            _pendingCharts.splice(0).forEach(function(cb) { try { cb(); } catch(e) { console.error('chart retry:', e); } });
+        }
+    }, 200);
+});
 
 /* ===== INIT ===== */
 function initApp() {
@@ -222,23 +235,24 @@ function renderVNIndex() {
         if (charts.vnindexMini) charts.vnindexMini.destroy();
         const values = prices.map(p => p.close);
         const isUp = values[values.length - 1] >= values[0];
-        charts.vnindexMini = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: prices.map(p => ''),
-                datasets: [{
-                    data: values,
-                    borderColor: isUp ? '#22c55e' : '#ef4444',
-                    borderWidth: 2,
-                    fill: true,
-                    backgroundColor: (ctx) => {
-                        const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
-                        g.addColorStop(0, isUp ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)');
-                        g.addColorStop(1, isUp ? 'rgba(34,197,94,0)' : 'rgba(239,68,68,0)');
-                        return g;
-                    },
-                    pointRadius: 0,
-                    tension: 0.4,
+        _chart(function() {
+            charts.vnindexMini = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: prices.map(p => ''),
+                    datasets: [{
+                        data: values,
+                        borderColor: isUp ? '#22c55e' : '#ef4444',
+                        borderWidth: 2,
+                        fill: true,
+                        backgroundColor: (ctx) => {
+                            const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+                            g.addColorStop(0, isUp ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)');
+                            g.addColorStop(1, isUp ? 'rgba(34,197,94,0)' : 'rgba(239,68,68,0)');
+                            return g;
+                        },
+                        pointRadius: 0,
+                        tension: 0.4,
                 }]
             },
             options: {
@@ -250,6 +264,7 @@ function renderVNIndex() {
                     y: { display: false }
                 }
             }
+        });
         });
     }
 }
@@ -267,25 +282,27 @@ function renderBreadth() {
 
     const ctx = document.getElementById('breadthDonut').getContext('2d');
     if (charts.breadthDonut) charts.breadthDonut.destroy();
-    charts.breadthDonut = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Tăng', 'Giảm', 'Đứng'],
-            datasets: [{
-                data: [bd.advancing || 0, bd.declining || 0, bd.unchanged || 0],
-                backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
-                borderWidth: 0,
-                hoverOffset: 6,
-            }]
-        },
-        options: {
-            cutout: '70%',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
+    _chart(function() {
+        charts.breadthDonut = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Tăng', 'Giảm', 'Đứng'],
+                datasets: [{
+                    data: [bd.advancing || 0, bd.declining || 0, bd.unchanged || 0],
+                    backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'],
+                    borderWidth: 0,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                }
             }
-        }
+        });
     });
 }
 
@@ -599,52 +616,55 @@ function renderSectorFull() {
     // Sector rotation chart
     const ctx = document.getElementById('sectorRotationChart').getContext('2d');
     if (charts.sectorRotation) charts.sectorRotation.destroy();
-    charts.sectorRotation = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: sectors.map(s => s.name),
-            datasets: [{
-                label: 'Sức mạnh',
-                data: sectors.map(s => s.strength || 0),
-                backgroundColor: 'rgba(59,130,246,0.15)',
-                borderColor: '#3b82f6',
-                borderWidth: 2,
-                pointRadius: 3,
-                pointBackgroundColor: '#3b82f6',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: '#8899bb' } }
+    _chart(function() {
+        charts.sectorRotation = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: sectors.map(s => s.name),
+                datasets: [{
+                    label: 'Sức mạnh',
+                    data: sectors.map(s => s.strength || 0),
+                    backgroundColor: 'rgba(59,130,246,0.15)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#3b82f6',
+                }]
             },
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    ticks: { color: '#556688', backdropColor: 'transparent' },
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    angleLines: { color: 'rgba(255,255,255,0.05)' },
-                    pointLabels: { color: '#8899bb', font: { size: 10 } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#8899bb' } }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: { color: '#556688', backdropColor: 'transparent' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        angleLines: { color: 'rgba(255,255,255,0.05)' },
+                        pointLabels: { color: '#8899bb', font: { size: 10 } }
+                    }
                 }
             }
-        }
+        });
     });
 
     // Sector bubble chart
     const ctx2 = document.getElementById('sectorBubbleChart').getContext('2d');
     if (charts.sectorBubble) charts.sectorBubble.destroy();
-    charts.sectorBubble = new Chart(ctx2, {
-        type: 'bubble',
-        data: {
-            datasets: sectors.map(s => ({
-                label: s.name,
-                data: [{ x: s.strength || 0, y: s.cashflow || 0, r: Math.abs(s.momentum || 10) * 3 + 5 }],
-                backgroundColor: (s.change || 0) >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)',
-                borderColor: (s.change || 0) >= 0 ? '#22c55e' : '#ef4444',
-                borderWidth: 1,
-            }))
-        },
+    _chart(function() {
+        charts.sectorBubble = new Chart(ctx2, {
+            type: 'bubble',
+            data: {
+                datasets: sectors.map(s => ({
+                    label: s.name,
+                    data: [{ x: s.strength || 0, y: s.cashflow || 0, r: Math.abs(s.momentum || 10) * 3 + 5 }],
+                    backgroundColor: (s.change || 0) >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)',
+                    borderColor: (s.change || 0) >= 0 ? '#22c55e' : '#ef4444',
+                    borderWidth: 1,
+                }))
+            },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -660,7 +680,8 @@ function renderSectorFull() {
                 x: { title: { display: true, text: 'Sức mạnh', color: '#8899bb' }, ticks: { color: '#556688' }, grid: { color: 'rgba(255,255,255,0.03)' } },
                 y: { title: { display: true, text: 'Dòng tiền', color: '#8899bb' }, ticks: { color: '#556688' }, grid: { color: 'rgba(255,255,255,0.03)' } }
             }
-        }
+}
+        });
     });
 }
 
